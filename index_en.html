@@ -42,6 +42,7 @@ a:hover{color:var(--accent)}
 .badge{display:inline-flex;align-items:center;gap:.4rem;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 30%,transparent);padding:.3rem .75rem;border-radius:100px;margin-bottom:1.25rem}
 .badge::before{content:"";width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes heartbeat{0%,100%{transform:scale(1)}14%{transform:scale(1.2)}28%{transform:scale(1)}42%{transform:scale(1.15)}56%{transform:scale(1)}}
 h1{font-size:2.25rem;font-weight:800;letter-spacing:-.04em;line-height:1.08;margin-bottom:.75rem;background:linear-gradient(135deg,var(--fg) 0%,var(--fg2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 h1 em{font-style:normal;-webkit-text-fill-color:var(--accent2)}
 .hero-sub{font-size:.95rem;color:var(--fg2);max-width:500px;margin:0 auto 2rem;line-height:1.6}
@@ -51,7 +52,7 @@ h1 em{font-style:normal;-webkit-text-fill-color:var(--accent2)}
 .btn-primary:hover{background:#16a34a;color:#fff;transform:translateY(-2px);box-shadow:0 8px 32px rgba(34,197,94,.35)}
 .btn-ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
 .btn-ghost:hover{border-color:var(--fg2);background:var(--bg2)}
-.free-tag{font-size:.7rem;background:var(--green-glow);color:var(--green);padding:.15rem .5rem;border-radius:100px;font-weight:700;letter-spacing:.03em;border:1px solid color-mix(in srgb,var(--green) 25%,transparent)}
+.free-tag{font-size:.7rem;background:var(--green-glow);color:var(--green);padding:.15rem .5rem;border-radius:100px;font-weight:700;letter-spacing:.03em;border:1px solid color-mix(in srgb,var(--green) 25%,transparent);animation:heartbeat 1.5s ease-in-out infinite}
 .hero-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-top:2.5rem;width:100%;max-width:420px}
 .stat{text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.65rem .15rem}
 .stat-num{display:block;font-size:1.1rem;font-weight:800;letter-spacing:-.03em;color:var(--accent2)}
