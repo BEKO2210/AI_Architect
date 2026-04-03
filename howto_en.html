@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>How-To: From Zero to AI Agent Harness — Claw Code</title>
+<meta name="description" content="Step-by-step guide: Learn the architecture of an AI Agent Harness from scratch. 10 sections, every error explained.">
+<link rel="icon" href="favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--bg4:#e8e8e8;--fg:#111;--fg2:#666;--accent:#4f46e5;--accent2:#6366f1;--accent-glow:rgba(79,70,229,.08);--green-glow:rgba(34,197,94,.06);--border:#e0e0e0;--border2:#d0d0d0}}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.5rem}
+.lang-sw{font-size:.7rem;color:var(--fg2);font-weight:600;padding:.25rem .5rem;border:1px solid var(--border);border-radius:5px}
+.lang-sw:hover{color:var(--fg);border-color:var(--fg2)}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:480px;margin:0 auto 1.5rem;line-height:1.6}
+.hero-stats{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.hs{text-align:center;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.hs strong{display:block;font-size:1.3rem;color:var(--accent2);letter-spacing:-.02em}
+.hs span{font-size:.6rem;color:var(--fg2);text-transform:uppercase;letter-spacing:.05em}
+
+/* PROGRESS */
+.progress-wrap{max-width:var(--max-w);margin:0 auto;padding:0 1rem 2rem}
+.progress-bar{height:6px;background:var(--bg2);border-radius:100px;overflow:hidden;border:1px solid var(--border)}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s;border-radius:100px}
+.progress-label{display:flex;justify-content:space-between;font-size:.65rem;color:var(--fg2);margin-top:.4rem}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-num{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* TAGS */
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.tag{font-size:.6rem;padding:.2rem .5rem;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tag-beginner{background:var(--green-glow);color:var(--green)}
+.tag-core{background:var(--accent-glow);color:var(--accent2)}
+.tag-advanced{background:var(--orange-glow);color:var(--orange)}
+.tag-time{background:var(--blue-glow);color:var(--blue)}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1rem;font-weight:700;color:var(--fg);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+
+/* STEPS */
+.steps{margin:1.5rem 0}
+.step{display:grid;grid-template-columns:2rem 1fr;gap:1rem;margin-bottom:1.5rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.step-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+.step-title{font-weight:700;color:var(--fg);font-size:.9rem;margin-bottom:.4rem}
+.step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.step code{font-size:.8em}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+
+/* NAVIGATION */
+.toc{position:sticky;top:80px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:2rem}
+.toc-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--fg);margin-bottom:.75rem}
+.toc-list{list-style:none;padding:0;margin:0}
+.toc-list li{margin:.3rem 0}
+.toc-list a{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--fg2);padding:.3rem .5rem;border-radius:4px;transition:all .2s}
+.toc-list a:hover{background:var(--bg3);color:var(--fg)}
+.toc-list a::before{content:counter(item);counter-increment:item;width:18px;height:18px;background:var(--bg3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:var(--accent2)}
+.toc-list{counter-reset:item}
+.toc-list a.active{background:var(--accent-glow);color:var(--accent2)}
+
+/* QUICK LINKS */
+.quick-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin:1.5rem 0}
+.quick-link{display:flex;align-items:center;gap:.75rem;padding:1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);transition:all .2s}
+.quick-link:hover{border-color:var(--accent);transform:translateY(-2px)}
+.quick-link-icon{width:36px;height:36px;border-radius:var(--radius-sm);background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.quick-link-text{flex:1}
+.quick-link-title{font-weight:700;font-size:.85rem;color:var(--fg)}
+.quick-link-desc{font-size:.7rem;color:var(--fg2)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-num{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.step{grid-template-columns:2.5rem 1fr;gap:1.25rem}
+.step-num{width:2.5rem;height:2.5rem;font-size:1rem}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="index_en.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<a href="index_en.html" class="nav-back">← Home</a>
+<a href="howto.html" class="lang-sw">DE</a>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Complete Guide · 10 Sections · ~4 Hours</div>
+<h1>From Zero to<br><em>AI Agent Harness</em></h1>
+<p class="hero-sub">The ultimate step-by-step guide. Every command. Every error. Every solution. From your first terminal command to your own AI system.</p>
+<div class="hero-stats">
+<div class="hs"><strong>10</strong><span>Sections</span></div>
+<div class="hs"><strong>24</strong><span>CLI Commands</span></div>
+<div class="hs"><strong>49</strong><span>Tests</span></div>
+<div class="hs"><strong>30+</strong><span>Subsystems</span></div>
+</div>
+</header>
+
+<div class="progress-wrap">
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="progress-label"><span>Your Progress</span><span id="progressText">0%</span></div>
+</div>
+
+<div class="container">
+
+<!-- TABLE OF CONTENTS -->
+<nav class="toc">
+<div class="toc-title">📋 Table of Contents</div>
+<ol class="toc-list">
+<li><a href="#s1">Setting Up Your Workspace</a></li>
+<li><a href="#s2">Cloning the Repository & First Commands</a></li>
+<li><a href="#s3">The Three-Layer Architecture</a></li>
+<li><a href="#s4">Exploring Commands & Tools</a></li>
+<li><a href="#s5">Understanding Prompt Routing</a></li>
+<li><a href="#s6">Sessions & Bootstrap</a></li>
+<li><a href="#s7">Turn-Loops & Budget System</a></li>
+<li><a href="#s8">Permission System & Security</a></li>
+<li><a href="#s9">Tests & Quality Assurance</a></li>
+<li><a href="#s10">Building Your Own AI System</a></li>
+</ol>
+</nav>
+
+<!-- PREREQUISITES -->
+<div class="quick-links">
+<a href="#s1" class="quick-link">
+<div class="quick-link-icon">🔧</div>
+<div class="quick-link-text">
+<div class="quick-link-title">Windows, macOS & Linux</div>
+<div class="quick-link-desc">All systems supported</div>
+</div>
+</a>
+<a href="#s1" class="quick-link">
+<div class="quick-link-icon">🌐</div>
+<div class="quick-link-text">
+<div class="quick-link-title">Internet Connection</div>
+<div class="quick-link-desc">For download & Git</div>
+</div>
+</a>
+<a href="#s1" class="quick-link">
+<div class="quick-link-icon">⏱️</div>
+<div class="quick-link-text">
+<div class="quick-link-title">~4 Hours Time</div>
+<div class="quick-link-desc">Each section doable separately</div>
+</div>
+</a>
+<a href="#s1" class="quick-link">
+<div class="quick-link-icon">📚</div>
+<div class="quick-link-text">
+<div class="quick-link-title">Basic Terminal Knowledge</div>
+<div class="quick-link-desc">CD, LS, running commands</div>
+</div>
+</a>
+</div>
+
+<!-- SECTION 1 -->
+<section class="section" id="s1">
+<div class="section-header">
+<div class="section-num">01</div>
+<div class="section-title-wrap">
+<div class="section-label">Part I — Fundamentals</div>
+<h2 class="section-title">Setting Up Your Workspace</h2>
+<p class="section-desc">Install Python, Git, and terminal — for Windows, macOS, and Linux. Every step explained, every error solved.</p>
+<div class="tags">
+<span class="tag tag-beginner">Beginner</span>
+<span class="tag tag-time">20 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>What You'll Have at the End</h3>
+<p>A fully set up development system with Python 3.8+, Git for version control, and a terminal that can run all project commands.</p>
+
+<h3>Step 1: Install Python</h3>
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Good News</div>
+<div class="info-box-text">Claw Code requires no external dependencies — everything runs with the Python standard library.</div>
+</div>
+</div>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Check Python Version</div>
+<div class="step-desc">Open your terminal and type:<br><code>python3 --version</code> (macOS/Linux) or <code>python --version</code> (Windows)</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Install Python (if needed)</div>
+<div class="step-desc"><strong>Windows:</strong> Download from <a href="https://python.org" target="_blank">python.org</a><br><strong>macOS:</strong> <code>brew install python3</code> or installer from python.org<br><strong>Linux:</strong> <code>sudo apt install python3</code> (Ubuntu/Debian)</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Verify Installation</div>
+<div class="step-desc">Run <code>python3 --version</code> again. You should see <strong>Python 3.8 or higher</strong>.</div>
+</div>
+</div>
+</div>
+
+<h3>Step 2: Install Git</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">git --version</span><br>
+<span class="output">git version 2.34.1</span><br><br>
+<span class="comment"># If not installed:</span><br>
+<span class="comment"># Windows: https://git-scm.com/download/win</span><br>
+<span class="comment"># macOS: brew install git</span><br>
+<span class="comment"># Linux: sudo apt install git</span>
+</div>
+</div>
+
+<h3>Step 3: Download the Project</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Navigate to your projects folder</span><br>
+<span class="prompt">$</span> <span class="cmd">cd ~/Documents</span><br><br>
+<span class="comment"># Clone the repository</span><br>
+<span class="prompt">$</span> <span class="cmd">git clone https://github.com/instructkr/claw-code.git</span><br>
+<span class="output">Cloning into 'claw-code'...</span><br><br>
+<span class="comment"># Change into the project directory</span><br>
+<span class="prompt">$</span> <span class="cmd">cd claw-code</span><br><br>
+<span class="comment"># Verify the structure</span><br>
+<span class="prompt">$</span> <span class="cmd">ls</span><br>
+<span class="output">src/  tests/  assets/  README.md  ANLEITUNG.md</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Section 1 Complete!</div>
+<div class="info-box-text">Your system is ready. You have Python, Git, and the Claw Code repository installed.</div>
+</div>
+</div>
+
+<div class="info-box error">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Common Errors</div>
+<div class="info-box-text">
+<strong>"python3: command not found"</strong> → Use <code>python</code> instead of <code>python3</code> on Windows<br>
+<strong>"Permission denied"</strong> → Run terminal as Administrator<br>
+<strong>"git: command not found"</strong> → Git is not in PATH — restart or update PATH
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION 2 -->
+<section class="section" id="s2">
+<div class="section-header">
+<div class="section-num">02</div>
+<div class="section-title-wrap">
+<div class="section-label">Part I — Fundamentals</div>
+<h2 class="section-title">Cloning the Repository & First Commands</h2>
+<p class="section-desc">Understand the directory structure and run the first three essential commands.</p>
+<div class="tags">
+<span class="tag tag-beginner">Beginner</span>
+<span class="tag tag-time">15 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Understanding Project Structure</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Folder/File</th><th>Purpose</th></tr>
+<tr><td><code>src/</code></td><td>Main source code — all Python modules</td></tr>
+<tr><td><code>src/main.py</code></td><td>CLI entry point with 24 commands</td></tr>
+<tr><td><code>src/commands.py</code></td><td>~150 command metadata entries</td></tr>
+<tr><td><code>src/tools.py</code></td><td>~100 tool metadata entries</td></tr>
+<tr><td><code>src/runtime.py</code></td><td>Prompt routing & sessions</td></tr>
+<tr><td><code>tests/</code></td><td>49 test cases</td></tr>
+<tr><td><code>ANLEITUNG.md</code></td><td>Complete command reference (German)</td></tr>
+</table>
+</div>
+
+<h3>The First Three Commands</h3>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Show Porting Overview</div>
+<div class="step-desc">Displays a summary of the entire Python workspace.</div>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main summary</span><br><br>
+<span class="output"># Claw Code — Porting Overview<br><br>
+## Python Workspace<br>- **Files:** 25 Python files<br>- **Subsystems:** 30+ modules<br>- **Commands:** ~150 mirrored<br>- **Tools:** ~100 mirrored</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Show File Structure</div>
+<div class="step-desc">Lists all Python files grouped by modules.</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main manifest</span><br><br>
+<span class="output">== Python Port Manifest ==<br>src/main.py<br>src/models.py<br>src/commands.py<br>src/tools.py<br>... (more files)</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">List Subsystems</div>
+<div class="step-desc">Shows the top-level modules of the project.</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main subsystems --limit 10</span><br><br>
+<span class="output">Subsystems (10 of 30+):<br>- assistant<br>- bridge<br>- commands<br>- context<br>- ...</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Important</div>
+<div class="info-box-text">All commands must be run from the <strong>project root directory</strong> (where the <code>src/</code> folder is). If you get errors, check with <code>pwd</code> that you're in the right folder.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION 3 -->
+<section class="section" id="s3">
+<div class="section-header">
+<div class="section-num">03</div>
+<div class="section-title-wrap">
+<div class="section-label">Part I — Fundamentals</div>
+<h2 class="section-title">The Three-Layer Architecture</h2>
+<p class="section-desc">Mirror layer, orchestration, infrastructure — how the layers work together and which files go where.</p>
+<div class="tags">
+<span class="tag tag-beginner">Beginner</span>
+<span class="tag tag-core">Core Concept</span>
+<span class="tag tag-time">25 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Architecture Overview</h3>
+<p>Claw Code follows a clear <strong>Three-Layer Model</strong>. This separation allows the system to be understood and extended modularly.</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>Layer</th><th>Files</th><th>Purpose</th></tr>
+<tr><td><strong>Mirror</strong></td><td><code>commands.py</code>, <code>tools.py</code>, <code>reference_data/</code></td><td>JSON snapshots as immutable reference</td></tr>
+<tr><td><strong>Orchestration</strong></td><td><code>runtime.py</code>, <code>query_engine.py</code></td><td>Prompt routing, sessions, turn-loops</td></tr>
+<tr><td><strong>Infrastructure</strong></td><td><code>setup.py</code>, <code>context.py</code>, <code>session_store.py</code></td><td>Environment, persistence, logging</td></tr>
+</table>
+</div>
+
+<h3>Layer 1: Mirror Layer</h3>
+<p>This layer loads the archived JSON snapshots and provides them as typed Python objects:</p>
+<ul>
+<li><code>commands.py</code> — Loads ~150 commands from <code>reference_data/commands_snapshot.json</code></li>
+<li><code>tools.py</code> — Loads ~100 tools from <code>reference_data/tools_snapshot.json</code></li>
+<li>LRU cache for fast access</li>
+<li>Immutable data structures (Frozen Dataclasses)</li>
+</ul>
+
+<h3>Layer 2: Orchestration Layer</h3>
+<p>This is where the "intelligence" of the system happens:</p>
+<ul>
+<li><strong><code>runtime.py</code></strong> — <code>PortRuntime.route_prompt()</code> tokenizes prompts and finds matching commands/tools</li>
+<li><strong><code>query_engine.py</code></strong> — <code>QueryEnginePort</code> manages session states and message streams</li>
+<li>Token-based scoring for matching</li>
+<li>Multi-turn loops with budget control</li>
+</ul>
+
+<h3>Layer 3: Infrastructure Layer</h3>
+<p>Everything that keeps the system running:</p>
+<ul>
+<li><strong><code>setup.py</code></strong> — Environment detection, prefetch operations</li>
+<li><strong><code>context.py</code></strong> — Workspace context (paths, file count)</li>
+<li><strong><code>session_store.py</code></strong> — Persistence in <code>.port_sessions/</code></li>
+<li>Trust-gating for secure initialization</li>
+</ul>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">python</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># View the bootstrap phases</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap-graph</span><br><br>
+<span class="output">Bootstrap Phases:<br>1. Prefetch<br>2. Trust Gate<br>3. CLI Parser<br>4. Setup<br>5. Deferred Init<br>6. Mode Routing<br>7. Query Submit</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION 4 -->
+<section class="section" id="s4">
+<div class="section-header">
+<div class="section-num">04</div>
+<div class="section-title-wrap">
+<div class="section-label">Part II — Core Features</div>
+<h2 class="section-title">Exploring Commands & Tools</h2>
+<p class="section-desc">Browse, filter, and view in detail the catalog of ~150 commands and ~100 tools.</p>
+<div class="tags">
+<span class="tag tag-core">Core</span>
+<span class="tag tag-time">20 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>List Commands</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Show all commands</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands</span><br><br>
+<span class="comment"># Show only first 10</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --limit 10</span><br><br>
+<span class="comment"># Search for "git"</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --query "git"</span><br><br>
+<span class="comment"># Hide plugin commands</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --no-plugin-commands</span>
+</div>
+</div>
+
+<h3>List Tools</h3>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Show all tools</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools</span><br><br>
+<span class="comment"># Search for "file"</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --query "file"</span><br><br>
+<span class="comment"># Block specific tool</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool Bash</span><br><br>
+<span class="comment"># Hide all MCP tools</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --no-mcp</span>
+</div>
+</div>
+
+<h3>View Individual Entries</h3>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Show Command Details</div>
+<div class="step-desc"><code>python3 -m src.main show-command "commit"</code> — Shows name, responsibility, and source hint of a command.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Show Tool Details</div>
+<div class="step-desc"><code>python3 -m src.main show-tool "Read"</code> — Shows detailed information about a tool.</div>
+</div>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Pro Tip</div>
+<div class="info-box-text">Use <code>--simple-mode</code> with tools for a compact view when you only need names and short descriptions.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION 5 -->
+<section class="section" id="s5">
+<div class="section-header">
+<div class="section-num">05</div>
+<div class="section-title-wrap">
+<div class="section-label">Part II — Core Features</div>
+<h2 class="section-title">Understanding Prompt Routing</h2>
+<p class="section-desc">How the token scoring algorithm routes a prompt to the right commands and tools.</p>
+<div class="tags">
+<span class="tag tag-core">Core</span>
+<span class="tag tag-time">30 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>The Routing Algorithm</h3>
+<p>The heart of the system is <code>PortRuntime.route_prompt()</code>. It transforms natural language into executable commands and tools.</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>Phase</th><th>Description</th></tr>
+<tr><td>1. Tokenization</td><td>Prompt is normalized: <code>/</code> and <code>-</code> → spaces, lowercase, deduplication</td></tr>
+<tr><td>2. Scoring</td><td>For each command/tool: How many tokens match in name, source hint, responsibility?</td></tr>
+<tr><td>3. Fair-Share</td><td>One best match per category guaranteed</td></tr>
+<tr><td>4. Fill-up</td><td>Rest sorted by score up to the limit</td></tr>
+</table>
+</div>
+
+<h3>Try Routing</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Route a prompt</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "Create a new branch"</span><br><br>
+<span class="output">Routed Matches:<br>1. Command: git-branch (Score: 0.85)<br>2. Tool: Bash (Score: 0.72)<br>3. Command: commit (Score: 0.45)<br>...</span><br><br>
+<span class="comment"># Adjust limit</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "Read the file" --limit 3</span>
+</div>
+</div>
+
+<h3>How the Score is Calculated</h3>
+<p>The algorithm compares prompt tokens with:</p>
+<ul>
+<li><strong>Command Name</strong> — exact word match</li>
+<li><strong>Source Hint</strong> — where the command comes from</li>
+<li><strong>Responsibility</strong> — what the command does</li>
+</ul>
+<p>The more tokens match, the higher the score (0.0 to 1.0).</p>
+</div>
+</section>
+
+<!-- SECTION 6 -->
+<section class="section" id="s6">
+<div class="section-header">
+<div class="section-num">06</div>
+<div class="section-title-wrap">
+<div class="section-label">Part II — Core Features</div>
+<h2 class="section-title">Sessions & Bootstrap</h2>
+<p class="section-desc">Build a complete runtime session, persist it, and restore it.</p>
+<div class="tags">
+<span class="tag tag-core">Core</span>
+<span class="tag tag-time">25 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Session Lifecycle</h3>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Create Session</div>
+<div class="step-desc"><code>QueryEnginePort.from_workspace()</code> collects workspace context and creates a new session.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Process Prompt</div>
+<div class="step-desc"><code>submit_message()</code> processes the prompt and updates the transcript.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Compaction</div>
+<div class="step-desc"><code>compact_messages_if_needed()</code> reduces the transcript when necessary.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<div class="step-title">Persistence</div>
+<div class="step-desc"><code>persist_session()</code> saves the session to <code>.port_sessions/</code>.</div>
+</div>
+</div>
+</div>
+
+<h3>Run Bootstrap</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Start complete session</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap "Analyze the codebase"</span><br><br>
+<span class="output">Session Report:<br>Session ID: sess_abc123xyz<br>Commands matched: 5<br>Tools matched: 3<br>Status: success</span><br><br>
+<span class="comment"># Save session</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main flush-transcript "My Analysis Session"</span><br><br>
+<span class="comment"># Load session</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main load-session sess_abc123xyz</span>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Session ID</div>
+<div class="info-box-text">The Session ID is displayed with every bootstrap and flush. Save it to restore the session later.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION 7 -->
+<section class="section" id="s7">
+<div class="section-header">
+<div class="section-num">07</div>
+<div class="section-title-wrap">
+<div class="section-label">Part II — Core Features</div>
+<h2 class="section-title">Turn-Loops & Budget System</h2>
+<p class="section-desc">Execute multi-turn loops, understand token budgets, and control stop conditions.</p>
+<div class="tags">
+<span class="tag tag-core">Core</span>
+<span class="tag tag-time">25 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>What are Turn-Loops?</h3>
+<p>A <strong>Turn</strong> is one pass through the system: Prompt → Routing → (simulated) Execution → Response. Turn-loops execute multiple turns in sequence, similar to how a real agent works.</p>
+
+<h3>Execute Turn-Loop</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Default: up to 5 turns</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Refactor the code"</span><br><br>
+<span class="comment"># Limit number of turns</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Refactor" --max-turns 3</span><br><br>
+<span class="comment"># JSON output for further processing</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Analyze" --structured-output</span>
+</div>
+</div>
+
+<h3>Budget System</h3>
+<p>The system tracks token consumption across turns:</p>
+<ul>
+<li><strong>Input Tokens</strong> — Prompt length</li>
+<li><strong>Output Tokens</strong> — Generated response</li>
+<li><strong>Total Budget</strong> — Maximum tokens per session</li>
+</ul>
+<p>On budget overrun, automatic compaction or stopping occurs.</p>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Note</div>
+<div class="info-box-text">The budget system is currently a simulation in this port. It shows how the original system manages resources without incurring real API costs.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION 8 -->
+<section class="section" id="s8">
+<div class="section-header">
+<div class="section-num">08</div>
+<div class="section-title-wrap">
+<div class="section-label">Part III — Advanced</div>
+<h2 class="section-title">Permission System & Security</h2>
+<p class="section-desc">Trust-gating, tool permissions, and the 7 bootstrap phases in detail.</p>
+<div class="tags">
+<span class="tag tag-advanced">Advanced</span>
+<span class="tag tag-time">20 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Trust-Gating</h3>
+<p>Deferred initialization is controlled via a <code>trusted</code> parameter:</p>
+<ul>
+<li><strong>trusted=True</strong> → Plugins, skills, MCP-prefetch, and session hooks enabled</li>
+<li><strong>trusted=False</strong> → All deferred initializations disabled</li>
+</ul>
+
+<h3>Tool Permissions</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Block single tool</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool Bash</span><br><br>
+<span class="comment"># Block multiple tools</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool Bash --deny-tool Write</span><br><br>
+<span class="comment"># Block by prefix (all MCP tools)</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-prefix mcp__</span>
+</div>
+</div>
+
+<h3>The 7 Bootstrap Phases</h3>
+<ol>
+<li><strong>Prefetch</strong> — Pre-load resources</li>
+<li><strong>Trust Gate</strong> — Trust verification</li>
+<li><strong>CLI Parser</strong> — Parse arguments</li>
+<li><strong>Setup</strong> — Initialize environment</li>
+<li><strong>Deferred Init</strong> — Deferred initialization</li>
+<li><strong>Mode Routing</strong> — Select operating mode</li>
+<li><strong>Query Submit</strong> — Process prompt</li>
+</ol>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap-graph</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION 9 -->
+<section class="section" id="s9">
+<div class="section-header">
+<div class="section-num">09</div>
+<div class="section-title-wrap">
+<div class="section-label">Part III — Advanced</div>
+<h2 class="section-title">Tests & Quality Assurance</h2>
+<p class="section-desc">Run all 49 tests, perform parity audit, interpret port manifest.</p>
+<div class="tags">
+<span class="tag tag-advanced">Advanced</span>
+<span class="tag tag-time">15 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Run Tests</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># All tests with verbose output</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m unittest discover -s tests -v</span><br><br>
+<span class="output">test_commands_load (test_porting_workspace.TestWorkspaceBasics) ... ok<br>test_tools_load (test_porting_workspace.TestRuntimeBasics) ... ok<br>test_runtime_bootstrap (test_porting_workspace.TestRuntimeBasics) ... ok<br>... (49 tests total)</span>
+</div>
+</div>
+
+<h3>Parity Audit</h3>
+<p>Compares the Python workspace with the archived TypeScript snapshot:</p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main parity-audit</span><br><br>
+<span class="output">Parity Audit Report:<br>- Root file coverage: 85%<br>- Directory coverage: 90%<br>- Command entries: 100%<br>- Tool entries: 100%</span>
+</div>
+</div>
+
+<h3>What is Being Tested?</h3>
+<ul>
+<li>All 24 CLI commands</li>
+<li>Command and tool catalog loading</li>
+<li>Session management</li>
+<li>Prompt routing</li>
+<li>Turn-loop execution</li>
+<li>JSON snapshot validity</li>
+</ul>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Success Criterion</div>
+<div class="info-box-text">All 49 tests should pass with <strong>"OK"</strong>. If there are failures, check your Python version (must be 3.8+).</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION 10 -->
+<section class="section" id="s10">
+<div class="section-header">
+<div class="section-num">10</div>
+<div class="section-title-wrap">
+<div class="section-label">Part III — Advanced</div>
+<h2 class="section-title">Building Your Own AI System</h2>
+<p class="section-desc">Create custom commands and tools, implement your own routing strategies, extend the system.</p>
+<div class="tags">
+<span class="tag tag-advanced">Advanced</span>
+<span class="tag tag-time">40 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Add Custom Commands</h3>
+<p>Commands are defined in <code>src/reference_data/commands_snapshot.json</code>. A command has this structure:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">json</span>
+</div>
+<div class="terminal-body">
+<span class="output">{<br>&nbsp;&nbsp;"name": "my-command",<br>&nbsp;&nbsp;"responsibility": "Description of what the command does",<br>&nbsp;&nbsp;"source_hint": "my_module",<br>&nbsp;&nbsp;"args": ["arg1", "arg2"]<br>}</span>
+</div>
+</div>
+
+<h3>Add Custom Tools</h3>
+<p>Tools follow a similar schema in <code>src/reference_data/tools_snapshot.json</code>:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="output">{<br>&nbsp;&nbsp;"name": "MyTool",<br>&nbsp;&nbsp;"description": "Description of tool functionality",<br>&nbsp;&nbsp;"permission_level": "read-only"<br>}</span>
+</div>
+</div>
+
+<h3>Customize Routing Strategy</h3>
+<p>In <code>src/runtime.py</code> you can modify the scoring algorithm:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Example: Adjust weighting</span><br>
+<span class="output">def _score(self, tokens, entry):<br>&nbsp;&nbsp;score = 0<br>&nbsp;&nbsp;score += len(tokens & entry.name_tokens) * 2.0  # Name more important<br>&nbsp;&nbsp;score += len(tokens & entry.desc_tokens) * 1.0<br>&nbsp;&nbsp;return score / len(tokens)</span>
+</div>
+</div>
+
+<h3>Create New Subsystem</h3>
+<p>New subsystems are created as packages under <code>src/</code>:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Create new subsystem "custom"</span><br>
+<span class="prompt">$</span> <span class="cmd">mkdir src/custom</span><br>
+<span class="prompt">$</span> <span class="cmd">touch src/custom/__init__.py</span><br>
+<span class="prompt">$</span> <span class="cmd">touch src/custom/engine.py</span><br><br>
+<span class="comment"># In src/custom/__init__.py:</span><br>
+<span class="output">from .engine import CustomEngine<br><br>__all__ = ["CustomEngine"]</span>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Architecture Tip</div>
+<div class="info-box-text">Maintain the three-layer architecture: Mirror (data), Orchestration (logic), Infrastructure (persistence). This keeps your code maintainable.</div>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">🎉</div>
+<div class="info-box-content">
+<div class="info-box-title">Congratulations!</div>
+<div class="info-box-text">You've completed the entire guide. You now understand the architecture of an AI Agent Harness and can build your own extensions. Time to implement your ideas!</div>
+</div>
+</div>
+</div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+<p>&copy; 2026 Belkis Aslani. All rights reserved.</p>
+<p style="margin-top:.4rem"><a href="impressum.html">Legal Notice</a> · <a href="impressum.html#datenschutz">Privacy</a> · <a href="index_en.html">Back to Book</a></p>
+</footer>
+
+<script>
+// Progress bar based on scroll position
+(function(){
+const sections=document.querySelectorAll('.section');
+const progressFill=document.getElementById('progressFill');
+const progressText=document.getElementById('progressText');
+const tocLinks=document.querySelectorAll('.toc-list a');
+
+function updateProgress(){
+const scrollTop=window.scrollY;
+const docHeight=document.body.scrollHeight-window.innerHeight;
+const scrollPercent=Math.round((scrollTop/docHeight)*100);
+progressFill.style.width=scrollPercent+'%';
+progressText.textContent=scrollPercent+'%';
+
+// Mark active link
+let activeIndex=0;
+sections.forEach((sec,i)=>{
+const rect=sec.getBoundingClientRect();
+if(rect.top<200)activeIndex=i;
+});
+tocLinks.forEach((link,i)=>{
+link.classList.toggle('active',i===activeIndex);
+});
+}
+
+window.addEventListener('scroll',updateProgress,{passive:true});
+updateProgress();
+})();
+</script>
+
+</body>
+</html>

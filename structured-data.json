@@ -1,0 +1,13 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Claw Code \u2014 Architecture of an AI Agent Harness",
+  "author": {"@type": "Person", "name": "Belkis Aslani"},
+  "datePublished": "2026-04-01",
+  "inLanguage": ["de", "en"],
+  "bookFormat": "EBook",
+  "numberOfPages": "14 chapters",
+  "description": "The complete technical documentation of the Python reimplementation of the Claude Code agent harness architecture.",
+  "publisher": {"@type": "Organization", "name": "Eigenverlag Belkis Aslani"},
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock"}
+}

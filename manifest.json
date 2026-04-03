@@ -1,0 +1,10 @@
+{
+  "name": "Claw Code Book",
+  "short_name": "ClawCode",
+  "description": "Architecture of an AI Agent Harness - Free Technical E-Book",
+  "start_url": "/claw-code_claude/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#6366f1",
+  "icons": [{"src": "favicon.svg", "sizes": "any", "type": "image/svg+xml"}]
+}

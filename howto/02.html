@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>02 — Repository klonen & erste Befehle — Claw Code How-To</title>
+<meta name="description" content="Lerne die Projektstruktur von Claw Code kennen und führe die ersten drei essenziellen Befehle aus: summary, manifest und subsystems.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.5rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500}
+.nav-back:hover{color:var(--fg)}
+.nav-howto{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700}
+.nav-howto:hover{background:var(--accent2);color:#fff}
+.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:var(--fg2)}
+.breadcrumb a{color:var(--fg2)}
+.breadcrumb a:hover{color:var(--accent2)}
+.breadcrumb-sep{color:var(--border2)}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:480px;margin:0 auto 1.5rem;line-height:1.6}
+.hero-meta{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.hm{text-align:center;padding:.5rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.75rem;color:var(--fg2)}
+.hm strong{display:block;font-size:.9rem;color:var(--accent2);letter-spacing:-.02em}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem 3rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-num{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* TAGS */
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.tag{font-size:.6rem;padding:.2rem .5rem;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tag-beginner{background:var(--green-glow);color:var(--green)}
+.tag-core{background:var(--accent-glow);color:var(--accent2)}
+.tag-time{background:var(--blue-glow);color:var(--blue)}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1rem;font-weight:700;color:var(--fg);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+.content h4{font-size:.9rem;font-weight:600;color:var(--fg);margin:1.25rem 0 .5rem}
+
+/* STEPS */
+.steps{margin:1.5rem 0}
+.step{display:grid;grid-template-columns:2rem 1fr;gap:1rem;margin-bottom:1.5rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.step-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+.step-title{font-weight:700;color:var(--fg);font-size:.9rem;margin-bottom:.4rem}
+.step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.step code{font-size:.8em}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem;color:var(--fg)}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .highlight{color:var(--accent2);font-weight:600}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+tr:hover td{background:var(--bg3)}
+
+/* FILE TREE */
+.file-tree{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.8}
+.file-tree .dir{color:var(--accent2);font-weight:600}
+.file-tree .file{color:var(--fg2)}
+.file-tree .comment{color:#666;font-style:italic}
+.file-tree-line{display:flex;align-items:flex-start;gap:.5rem}
+.file-tree-indent{width:1.5rem;flex-shrink:0}
+.file-tree-icon{width:1rem;text-align:center}
+
+/* COMMAND CARD */
+.command-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin:1.5rem 0}
+.command-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.command-icon{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
+.command-title-wrap{flex:1}
+.command-name{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--accent2)}
+.command-desc{font-size:.8rem;color:var(--fg2)}
+.command-syntax{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem;font-family:var(--mono);font-size:.85rem;margin:1rem 0}
+.command-syntax .kw{color:var(--accent2)}
+.command-syntax .arg{color:var(--orange)}
+.command-section{margin-top:1rem}
+.command-section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--fg);margin-bottom:.5rem}
+
+/* NAVIGATION BUTTONS */
+.nav-buttons{display:flex;justify-content:space-between;gap:1rem;margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border)}
+.nav-btn{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--fg2);font-size:.85rem;transition:all .2s}
+.nav-btn:hover{border-color:var(--accent);color:var(--fg)}
+.nav-btn.next{margin-left:auto;background:var(--accent);color:#fff;border-color:var(--accent)}
+.nav-btn.next:hover{background:var(--accent2);border-color:var(--accent2)}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-num{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.step{grid-template-columns:2.5rem 1fr;gap:1.25rem}
+.step-num{width:2.5rem;height:2.5rem;font-size:1rem}
+}
+@media(min-width:1024px){
+h1{font-size:2.5rem}
+.hero{padding:6rem 1.5rem 3rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<div class="breadcrumb">
+<a href="../howto.html">How-To</a>
+<span class="breadcrumb-sep">/</span>
+<span>02</span>
+</div>
+<a href="../howto.html" class="nav-back">← Zurück zur Übersicht</a>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Teil I — Grundlagen</div>
+<h1>02 — Repository klonen &<br><em>erste Befehle</em></h1>
+<p class="hero-sub">Lerne die Projektstruktur von Claw Code kennen und führe die ersten drei essenziellen Befehle aus, um das System zu erkunden.</p>
+<div class="hero-meta">
+<div class="hm"><strong>Anfänger</strong>Level</div>
+<div class="hm"><strong>~15 Min</strong>Dauer</div>
+<div class="hm"><strong>3 Befehle</strong>Commands</div>
+</div>
+</header>
+
+<div class="container">
+
+<!-- EINFÜHRUNG -->
+<section class="section">
+<div class="section-header">
+<div class="section-num">🎯</div>
+<div class="section-title-wrap">
+<div class="section-label">Lernziele</div>
+<h2 class="section-title">Was du in dieser Sektion lernst</h2>
+</div>
+</div>
+<div class="content">
+<p>Nach dieser Sektion verstehst du die <strong>Verzeichnisstruktur</strong> des Claw-Code-Projekts und hast deine ersten drei Befehle erfolgreich ausgeführt. Du wirst wissen, wo welche Komponenten liegen und wie du das System erkunden kannst.</p>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Projektstruktur verstehen</div>
+<div class="step-desc">Lerne, welche Dateien und Ordner wo liegen und welche Rolle sie spielen.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Erste Befehle ausführen</div>
+<div class="step-desc">Führe <code>summary</code>, <code>manifest</code> und <code>subsystems</code> aus und verstehe, was sie tun.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Troubleshooting beherrschen</div>
+<div class="step-desc">Kenne häufige Fehler und ihre Lösungen, falls etwas nicht funktioniert.</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PROJEKTSTRUKTUR -->
+<section class="section" id="struktur">
+<div class="section-header">
+<div class="section-num">📁</div>
+<div class="section-title-wrap">
+<div class="section-label">Grundlagen</div>
+<h2 class="section-title">Projektstruktur erklärt</h2>
+<p class="section-desc">Das Claw-Code-Repository folgt einer klaren Ordnung. Jeder Ordner hat eine bestimmte Aufgabe.</p>
+<div class="tags">
+<span class="tag tag-beginner">Wichtig</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Verzeichnisübersicht</h3>
+<p>Das Repository ist in mehrere Hauptverzeichnisse unterteilt. Hier ist die vollständige Übersicht:</p>
+
+<div class="file-tree">
+<div class="file-tree-line">
+<span class="file-tree-icon">📦</span>
+<span class="dir">claw-code/</span>
+<span class="comment"># Projekt-Root</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">📂</span>
+<span class="dir">src/</span>
+<span class="comment"># Hauptquellcode — alle Python-Module</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">🐍</span>
+<span class="file">main.py</span>
+<span class="comment"># CLI-Einstiegspunkt mit 24 Befehlen</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">🐍</span>
+<span class="file">commands.py</span>
+<span class="comment"># ~150 Befehls-Metadaten</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">🐍</span>
+<span class="file">tools.py</span>
+<span class="comment"># ~100 Tool-Metadaten</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">🐍</span>
+<span class="file">runtime.py</span>
+<span class="comment"># Prompt-Routing & Sessions</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">🐍</span>
+<span class="file">models.py</span>
+<span class="comment"># Datenmodelle & Klassen</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">📂</span>
+<span class="dir">reference_data/</span>
+<span class="comment"># JSON-Snapshots</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">🧪</span>
+<span class="dir">tests/</span>
+<span class="comment"># 49 Testfälle</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">🎨</span>
+<span class="dir">assets/</span>
+<span class="comment"># Bilder, Icons, Grafiken</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">🦀</span>
+<span class="dir">rust/</span>
+<span class="comment"># Rust-Implementierung (optional)</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">📄</span>
+<span class="file">README.md</span>
+<span class="comment"># Projekt-Übersicht</span>
+</div>
+<div class="file-tree-line">
+<span class="file-tree-indent"></span>
+<span class="file-tree-icon">📄</span>
+<span class="file">ANLEITUNG.md</span>
+<span class="comment"># Vollständige Befehlsreferenz</span>
+</div>
+</div>
+
+<h3>Detaillierte Erklärung der Ordner</h3>
+
+<div class="table-wrap">
+<table>
+<tr><th>Ordner/Datei</th><th>Inhalt</th><th>Zweck</th></tr>
+<tr><td><code>src/</code></td><td>25+ Python-Dateien</td><td>Hauptquellcode mit allen Modulen</td></tr>
+<tr><td><code>src/main.py</code></td><td>CLI-Einstiegspunkt</td><td>Verarbeitet alle 24 Befehle</td></tr>
+<tr><td><code>src/commands.py</code></td><td>~150 Befehls-Metadaten</td><td>Spiegelung der verfügbaren Befehle</td></tr>
+<tr><td><code>src/tools.py</code></td><td>~100 Tool-Metadaten</td><td>Spiegelung der verfügbaren Tools</td></tr>
+<tr><td><code>src/runtime.py</code></td><td>Runtime-Logik</td><td>Prompt-Routing, Sessions, Turn-Loops</td></tr>
+<tr><td><code>src/reference_data/</code></td><td>JSON-Dateien</td><td>Archivierte Snapshots als Referenz</td></tr>
+<tr><td><code>tests/</code></td><td>49 Testdateien</td><td>Qualitätssicherung & Parity-Tests</td></tr>
+<tr><td><code>assets/</code></td><td>Bilder, Icons</td><td>Dokumentation & Webseite</td></tr>
+<tr><td><code>ANLEITUNG.md</code></td><td>Markdown-Dokument</td><td>Vollständige deutsche Befehlsreferenz</td></tr>
+</table>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Merke dir das</div>
+<div class="info-box-text">Alle Befehle müssen aus dem <strong>Projekt-Root-Verzeichnis</strong> ausgeführt werden — also dort, wo sich der <code>src/</code>-Ordner befindet. Bei Fehlern prüfe mit <code>pwd</code> (macOS/Linux) oder <code>cd</code> (Windows), ob du im richtigen Ordner bist.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- BEFEHL 1: SUMMARY -->
+<section class="section" id="summary">
+<div class="section-header">
+<div class="section-num">01</div>
+<div class="section-title-wrap">
+<div class="section-label">Erster Befehl</div>
+<h2 class="section-title">Befehl: summary</h2>
+<p class="section-desc">Zeigt eine Übersicht des gesamten Python-Arbeitsbereichs an.</p>
+<div class="tags">
+<span class="tag tag-core">Essenziell</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<div class="command-card">
+<div class="command-header">
+<div class="command-icon">📊</div>
+<div class="command-title-wrap">
+<div class="command-name">summary</div>
+<div class="command-desc">Portierungsübersicht anzeigen</div>
+</div>
+</div>
+<div class="command-syntax">
+<span class="kw">python3</span> -m src.main <span class="kw">summary</span>
+</div>
+<div class="command-section">
+<div class="command-section-title">Was macht dieser Befehl?</div>
+<p>Der <code>summary</code>-Befehl zeigt eine Zusammenfassung des gesamten Python-Arbeitsbereichs. Er gibt dir einen schnellen Überblick über:</p>
+<ul>
+<li><strong>Dateien:</strong> Anzahl der Python-Dateien im Projekt</li>
+<li><strong>Subsysteme:</strong> Anzahl der Module/Komponenten</li>
+<li><strong>Befehle:</strong> Anzahl der gespiegelten Befehle (~150)</li>
+<li><strong>Tools:</strong> Anzahl der gespiegelten Tools (~100)</li>
+</ul>
+</div>
+</div>
+
+<h3>Beispielausgabe</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main summary</span><br><br>
+<span class="output"># Claw Code — Portierungsübersicht<br><br>
+## Python-Arbeitsbereich<br>
+- <span class="highlight">Dateien:</span> 25 Python-Dateien<br>
+- <span class="highlight">Subsysteme:</span> 30+ Module<br>
+- <span class="highlight">Befehle:</span> ~150 gespiegelt<br>
+- <span class="highlight">Tools:</span> ~100 gespiegelt<br><br>
+## Status<br>
+✓ Alle Module geladen<br>
+✓ Referenzdaten valid<br>
+✓ Runtime bereit</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Erfolgreich?</div>
+<div class="info-box-text">Wenn du diese Ausgabe siehst, funktioniert dein Setup korrekt! Der Befehl bestätigt, dass alle Module geladen werden konnten und die Runtime bereit ist.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- BEFEHL 2: MANIFEST -->
+<section class="section" id="manifest">
+<div class="section-header">
+<div class="section-num">02</div>
+<div class="section-title-wrap">
+<div class="section-label">Zweiter Befehl</div>
+<h2 class="section-title">Befehl: manifest</h2>
+<p class="section-desc">Listet alle Python-Dateien gruppiert nach Modulen auf.</p>
+<div class="tags">
+<span class="tag tag-core">Essenziell</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<div class="command-card">
+<div class="command-header">
+<div class="command-icon">📋</div>
+<div class="command-title-wrap">
+<div class="command-name">manifest</div>
+<div class="command-desc">Dateistruktur anzeigen</div>
+</div>
+</div>
+<div class="command-syntax">
+<span class="kw">python3</span> -m src.main <span class="kw">manifest</span> <span class="arg">[--sort name|time]</span>
+</div>
+<div class="command-section">
+<div class="command-section-title">Optionale Parameter</div>
+<ul>
+<li><code>--sort name</code> — Sortiert nach Dateiname (alphabetisch)</li>
+<li><code>--sort time</code> — Sortiert nach Änderungszeit (neueste zuerst)</li>
+</ul>
+</div>
+<div class="command-section">
+<div class="command-section-title">Was macht dieser Befehl?</div>
+<p>Der <code>manifest</code>-Befehl zeigt dir eine vollständige Liste aller Python-Dateien im Projekt. Die Dateien werden nach ihrem Modul gruppiert angezeigt, sodass du sofort siehst, welche Dateien zusammengehören.</p>
+</div>
+</div>
+
+<h3>Beispielausgabe</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main manifest</span><br><br>
+<span class="output">== Python-Port-Manifest ==<br><br>
+<span class="highlight">src/</span><br>
+  main.py<br>
+  models.py<br>
+  commands.py<br>
+  tools.py<br>
+  runtime.py<br>
+  query_engine.py<br>
+  context.py<br>
+  session_store.py<br>
+  setup.py<br>
+  ... (weitere Dateien)<br><br>
+<span class="highlight">src/reference_data/</span><br>
+  commands_snapshot.json<br>
+  tools_snapshot.json<br><br>
+<span class="highlight">tests/</span><br>
+  test_porting_workspace.py<br>
+  test_runtime.py<br>
+  ... (weitere Testdateien)</span>
+</div>
+</div>
+
+<h3>Wozu ist das nützlich?</h3>
+<p>Das Manifest hilft dir in vielen Situationen:</p>
+<ul>
+<li><strong>Überblick verschaffen:</strong> Schneller Blick auf alle Dateien</li>
+<li><strong>Parity-Prüfung:</strong> Vergleich mit dem TypeScript-Original</li>
+<li><strong>Navigation:</strong> Finde schnell die Datei, die du suchst</li>
+<li><strong>Dokumentation:</strong> Verstehe die Projektstruktur</li>
+</ul>
+</div>
+</section>
+
+<!-- BEFEHL 3: SUBSYSTEMS -->
+<section class="section" id="subsystems">
+<div class="section-header">
+<div class="section-num">03</div>
+<div class="section-title-wrap">
+<div class="section-label">Dritter Befehl</div>
+<h2 class="section-title">Befehl: subsystems</h2>
+<p class="section-desc">Zeigt die Top-Level-Module und Subsysteme des Projekts.</p>
+<div class="tags">
+<span class="tag tag-core">Essenziell</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<div class="command-card">
+<div class="command-header">
+<div class="command-icon">🧩</div>
+<div class="command-title-wrap">
+<div class="command-name">subsystems</div>
+<div class="command-desc">Subsysteme auflisten</div>
+</div>
+</div>
+<div class="command-syntax">
+<span class="kw">python3</span> -m src.main <span class="kw">subsystems</span> <span class="arg">[--limit N]</span>
+</div>
+<div class="command-section">
+<div class="command-section-title">Optionale Parameter</div>
+<ul>
+<li><code>--limit N</code> — Begrenzt die Ausgabe auf N Subsysteme (Standard: alle)</li>
+</ul>
+</div>
+<div class="command-section">
+<div class="command-section-title">Was macht dieser Befehl?</div>
+<p>Der <code>subsystems</code>-Befehl listet alle Top-Level-Module und Subsysteme des Projekts auf. Ein Subsystem ist eine logische Einheit, die zusammengehörige Funktionalität kapselt — zum Beispiel <code>commands</code> für Befehlsverwaltung oder <code>runtime</code> für die Ausführungslogik.</p>
+</div>
+</div>
+
+<h3>Beispielausgabe</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main subsystems --limit 10</span><br><br>
+<span class="output">Subsysteme (10 von 30+):<br><br>
+<span class="highlight">1. assistant</span><br>
+   → KI-Assistent-Integration<br><br>
+<span class="highlight">2. bridge</span><br>
+   → Adapter & Verbindungen<br><br>
+<span class="highlight">3. commands</span><br>
+   → Befehlsverwaltung (~150 Befehle)<br><br>
+<span class="highlight">4. context</span><br>
+   → Workspace-Kontext<br><br>
+<span class="highlight">5. runtime</span><br>
+   → Ausführungslogik & Routing<br><br>
+  ... und 25 weitere</span>
+</div>
+</div>
+
+<h3>Subsysteme im Detail</h3>
+<p>Jedes Subsystem hat eine spezifische Aufgabe im Gesamtsystem:</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>Subsystem</th><th>Aufgabe</th></tr>
+<tr><td><code>commands</code></td><td>Verwaltung aller ~150 verfügbaren Befehle</td></tr>
+<tr><td><code>tools</code></td><td>Verwaltung aller ~100 verfügbaren Tools</td></tr>
+<tr><td><code>runtime</code></td><td>Prompt-Routing, Sessions, Turn-Loops</td></tr>
+<tr><td><code>context</code></td><td>Workspace-Kontext (Pfade, Dateien)</td></tr>
+<tr><td><code>session_store</code></td><td>Persistenz für Sessions</td></tr>
+<tr><td><code>query_engine</code></td><td>Verarbeitung von Anfragen</td></tr>
+<tr><td><code>bridge</code></td><td>Adapter zu externen Systemen</td></tr>
+</table>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Pro-Tipp</div>
+<div class="info-box-text">Verwende <code>--limit</code> für einen schnellen Überblick, oder lasse den Parameter weg, um alle 30+ Subsysteme zu sehen. So lernst du nach und nach die Architektur kennen.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ZUSAMMENFASSUNG -->
+<section class="section" id="zusammenfassung">
+<div class="section-header">
+<div class="section-num">✅</div>
+<div class="section-title-wrap">
+<div class="section-label">Sektion abgeschlossen</div>
+<h2 class="section-title">Zusammenfassung</h2>
+</div>
+</div>
+
+<div class="content">
+<p>Du hast nun die ersten drei essenziellen Befehle ausgeführt und verstehst die Projektstruktur. Hier noch einmal die wichtigsten Punkte:</p>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">summary</div>
+<div class="step-desc">Zeigt eine Übersicht über Dateien, Subsysteme, Befehle und Tools. Dein "Status-Check" für das System.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">manifest</div>
+<div class="step-desc">Listet alle Python-Dateien auf, gruppiert nach Modulen. Ideal für Navigation und Parity-Prüfung.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">subsystems</div>
+<div class="step-desc">Zeigt alle Top-Level-Module. So lernst du die Architektur des Systems kennen.</div>
+</div>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">🎉</div>
+<div class="info-box-content">
+<div class="info-box-title">Gut gemacht!</div>
+<div class="info-box-text">Du kannst nun das Projekt erkunden und die ersten Befehle ausführen. Im nächsten Teil lernst du die <strong>Drei-Schichten-Architektur</strong> kennen und wie die Komponenten zusammenspielen.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TROUBLESHOOTING -->
+<section class="section" id="troubleshooting">
+<div class="section-header">
+<div class="section-num">🔧</div>
+<div class="section-title-wrap">
+<div class="section-label">Hilfe</div>
+<h2 class="section-title">Troubleshooting</h2>
+<p class="section-desc">Häufige Probleme und ihre Lösungen.</p>
+</div>
+</div>
+
+<div class="content">
+<h3>Häufige Fehler</h3>
+
+<div class="info-box error">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">"ModuleNotFoundError: No module named 'src'"</div>
+<div class="info-box-text">
+<strong>Ursache:</strong> Du befindest dich nicht im Projekt-Root-Verzeichnis.<br><br>
+<strong>Lösung:</strong> Navigiere mit <code>cd</code> in das Verzeichnis, das den <code>src/</code>-Ordner enthält. Prüfe mit <code>ls</code> (macOS/Linux) oder <code>dir</code> (Windows), ob <code>src/</code> sichtbar ist.
+</div>
+</div>
+</div>
+
+<div class="info-box error">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">"python3: command not found"</div>
+<div class="info-box-text">
+<strong>Ursache:</strong> Python ist nicht installiert oder nicht im PATH.<br><br>
+<strong>Lösung:</strong> Verwende auf Windows <code>python</code> statt <code>python3</code>. Prüfe die Installation mit <code>python --version</code>.
+</div>
+</div>
+</div>
+
+<div class="info-box error">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">"Permission denied"</div>
+<div class="info-box-text">
+<strong>Ursache:</strong> Keine Ausführungsrechte für das Verzeichnis.<br><br>
+<strong>Lösung:</strong> Auf macOS/Linux: <code>chmod +x</code> für die Dateien setzen. Auf Windows: Terminal als Administrator öffnen.
+</div>
+</div>
+</div>
+
+<div class="info-box error">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Leere Ausgabe oder Fehler bei Befehlen</div>
+<div class="info-box-text">
+<strong>Ursache:</strong> Python-Version zu alt oder beschädigte Dateien.<br><br>
+<strong>Lösung:</strong> Stelle sicher, dass Python 3.8+ installiert ist (<code>python3 --version</code>). Falls nötig, klone das Repository erneut.
+</div>
+</div>
+</div>
+
+<h3>Schnell-Checkliste</h3>
+<ul>
+<li>✓ Befinde ich mich im Projekt-Root? (siehe <code>src/</code>-Ordner)</li>
+<li>✓ Ist Python 3.8+ installiert?</li>
+<li>✓ Verwende ich den richtigen Python-Befehl? (<code>python3</code> vs <code>python</code>)</li>
+<li>✓ Ist das Repository vollständig geklont?</li>
+</ul>
+</div>
+</section>
+
+<!-- NAVIGATION BUTTONS -->
+<div class="nav-buttons">
+<a href="../howto.html#s1" class="nav-btn">← 01: Arbeitsplatz einrichten</a>
+<a href="../howto.html#s3" class="nav-btn next">03: Drei-Schichten-Architektur →</a>
+</div>
+
+</div><!-- /container -->
+
+<footer style="border-top:1px solid var(--border);padding:2rem 1rem;text-align:center;margin-top:2rem">
+<p style="font-size:.75rem;color:var(--fg2)">Claw Code — Architektur eines KI-Agent-Harness</p>
+</footer>
+
+</body>
+</html>

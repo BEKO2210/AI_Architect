@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>04 — Befehle & Tools erkunden — Claw Code</title>
+<meta name="description" content="Detailliertes Tutorial zum Erkunden, Filtern und Suchen von Befehlen und Tools im Claw Code KI-Agent-Harness.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--bg4:#e8e8e8;--fg:#111;--fg2:#666;--accent:#4f46e5;--accent2:#6366f1;--accent-glow:rgba(79,70,229,.08);--green-glow:rgba(34,197,94,.06);--border:#e0e0e0;--border2:#d0d0d0}}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.5rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500;padding:.35rem .75rem;border:1px solid var(--border);border-radius:6px;transition:all .2s}
+.nav-back:hover{color:var(--fg);border-color:var(--fg2);background:var(--bg2)}
+.nav-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:480px;margin:0 auto 1.5rem;line-height:1.6}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-num{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* TAGS */
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.tag{font-size:.6rem;padding:.2rem .5rem;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tag-core{background:var(--accent-glow);color:var(--accent2)}
+.tag-beginner{background:var(--green-glow);color:var(--green)}
+.tag-advanced{background:var(--orange-glow);color:var(--orange)}
+.tag-time{background:var(--blue-glow);color:var(--blue)}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1rem;font-weight:700;color:var(--fg);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+.content h4{font-size:.9rem;font-weight:700;color:var(--fg);margin:1.25rem 0 .5rem}
+
+/* OPTION CARD */
+.option-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin:1rem 0}
+.option-card-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.option-name{font-family:var(--mono);font-size:.8rem;color:var(--accent2);font-weight:600}
+.option-type{font-size:.65rem;color:var(--fg2);background:var(--bg3);padding:.15rem .4rem;border-radius:4px}
+.option-desc{font-size:.8rem;color:var(--fg2);line-height:1.6}
+.option-example{margin-top:.75rem;padding:.75rem;background:var(--bg);border-radius:6px;border-left:3px solid var(--green)}
+.option-example code{font-size:.75rem}
+
+/* STEPS */
+.steps{margin:1.5rem 0}
+.step{display:grid;grid-template-columns:2rem 1fr;gap:1rem;margin-bottom:1.5rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.step-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+.step-title{font-weight:700;color:var(--fg);font-size:.9rem;margin-bottom:.4rem}
+.step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.step code{font-size:.8em}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .highlight{color:var(--accent2)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+
+/* QUICK LINKS */
+.quick-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin:1.5rem 0}
+.quick-link{display:flex;align-items:center;gap:.75rem;padding:1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);transition:all .2s}
+.quick-link:hover{border-color:var(--accent);transform:translateY(-2px)}
+.quick-link-icon{width:36px;height:36px;border-radius:var(--radius-sm);background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.quick-link-text{flex:1}
+.quick-link-title{font-weight:700;font-size:.85rem;color:var(--fg)}
+.quick-link-desc{font-size:.7rem;color:var(--fg2)}
+
+/* NAVIGATION */
+.toc{position:sticky;top:80px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:2rem}
+.toc-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--fg);margin-bottom:.75rem}
+.toc-list{list-style:none;padding:0;margin:0}
+.toc-list li{margin:.3rem 0}
+.toc-list a{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--fg2);padding:.3rem .5rem;border-radius:4px;transition:all .2s}
+.toc-list a:hover{background:var(--bg3);color:var(--fg)}
+.toc-list a::before{content:"";width:4px;height:4px;background:var(--accent);border-radius:50%}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-num{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.step{grid-template-columns:2.5rem 1fr;gap:1.25rem}
+.step-num{width:2.5rem;height:2.5rem;font-size:1rem}
+.toc-list{column-count:2;column-gap:1rem}
+.toc-list li{break-inside:avoid}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<a href="../howto.html" class="nav-back">← Zum How-To</a>
+<span class="nav-num">04</span>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Teil II — Kern-Features</div>
+<h1>04 — <em>Befehle & Tools</em><br>erkunden</h1>
+<p class="hero-sub">Den vollständigen Katalog der ~150 Befehle und ~100 Tools durchsuchen, filtern und im Detail analysieren.</p>
+</header>
+
+<div class="container">
+
+<!-- INHALTSVERZEICHNIS -->
+<nav class="toc">
+<div class="toc-title">📋 Inhaltsverzeichnis</div>
+<ul class="toc-list">
+<li><a href="#commands">Commands-Übersicht</a></li>
+<li><a href="#tools">Tools-Übersicht</a></li>
+<li><a href="#filter">Filtern und Suchen</a></li>
+<li><a href="#single">Einzelne Einträge anzeigen</a></li>
+<li><a href="#permissions">Permission-Optionen</a></li>
+</ul>
+</nav>
+
+<!-- QUICK LINKS -->
+<div class="quick-links">
+<a href="#commands" class="quick-link">
+<div class="quick-link-icon">📜</div>
+<div class="quick-link-text">
+<div class="quick-link-title">~150 Befehle</div>
+<div class="quick-link-desc">Vollständiger Commands-Katalog</div>
+</div>
+</a>
+<a href="#tools" class="quick-link">
+<div class="quick-link-icon">🔧</div>
+<div class="quick-link-text">
+<div class="quick-link-title">~100 Tools</div>
+<div class="quick-link-desc">Vollständiger Tools-Katalog</div>
+</div>
+</a>
+<a href="#filter" class="quick-link">
+<div class="quick-link-icon">🔍</div>
+<div class="quick-link-text">
+<div class="quick-link-title">Suche & Filter</div>
+<div class="quick-link-desc">Präzise Ergebnisse finden</div>
+</div>
+</a>
+<a href="#permissions" class="quick-link">
+<div class="quick-link-icon">🛡️</div>
+<div class="quick-link-text">
+<div class="quick-link-title">Permissions</div>
+<div class="quick-link-desc">Sicherheit kontrollieren</div>
+</div>
+</a>
+</div>
+
+<!-- SECTION: COMMANDS -->
+<section class="section" id="commands">
+<div class="section-header">
+<div class="section-num">📜</div>
+<div class="section-title-wrap">
+<div class="section-label">Übersicht</div>
+<h2 class="section-title">Commands-Übersicht</h2>
+<p class="section-desc">Alle verfügbaren Befehle auflisten und durchsuchen.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-beginner">Anfänger</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Der Claw Code Harness verfügt über einen umfangreichen Katalog von <strong>~150 Befehlen</strong>, die aus archivierten JSON-Snapshots geladen werden. Diese Befehle decken alle Aspekte der KI-Agent-Interaktion ab — von Git-Operationen bis hin zu komplexen Workflows.</p>
+
+<h3>Alle Befehle anzeigen</h3>
+<p>Der grundlegende Befehl zeigt den gesamten Commands-Katalog:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands</span><br><br>
+<span class="output">Verfügbare Commands (~150):<br><br>• git-commit — Commits Änderungen<br>• git-branch — Branch-Verwaltung<br>• git-push — Push zu Remote<br>• git-pull — Pull von Remote<br>• git-status — Status anzeigen<br>• git-log — Commit-History<br>• git-diff — Änderungen vergleichen<br>• git-merge — Branches mergen<br>• git-rebase — Commits rebasen<br>• git-checkout — Branch wechseln<br>... (weitere Befehle)</span>
+</div>
+</div>
+
+<h3>Ausgabe begrenzen mit --limit</h3>
+<p>Bei vielen Befehlen empfiehlt es sich, die Ausgabe zu begrenzen:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Nur die ersten 10 Befehle anzeigen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --limit 10</span><br><br>
+<span class="comment"># Nur die ersten 20 Befehle anzeigen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --limit 20</span><br><br>
+<span class="comment"># Kombiniert mit Suche</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --query "git" --limit 5</span>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Pro-Tipp</div>
+<div class="info-box-text">Verwende <code>--limit</code> immer in Kombination mit <code>--query</code>, um fokussierte Ergebnismengen zu erhalten. Das erleichtert die Übersichtlichkeit im Terminal.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION: TOOLS -->
+<section class="section" id="tools">
+<div class="section-header">
+<div class="section-num">🔧</div>
+<div class="section-title-wrap">
+<div class="section-label">Übersicht</div>
+<h2 class="section-title">Tools-Übersicht</h2>
+<p class="section-desc">Alle verfügbaren Tools auflisten und durchsuchen.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-beginner">Anfänger</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Neben den Befehlen stellt der Harness <strong>~100 Tools</strong> zur Verfügung. Tools sind Funktionen, die der Agent zur Interaktion mit dem System nutzt — Dateien lesen, Befehle ausführen, Code analysieren und vieles mehr.</p>
+
+<h3>Alle Tools anzeigen</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools</span><br><br>
+<span class="output">Verfügbare Tools (~100):<br><br>• Read — Datei lesen<br>• Write — Datei schreiben<br>• Edit — Datei bearbeiten<br>• Bash — Shell-Befehl ausführen<br>• Glob — Dateien suchen (Pattern)<br>• Grep — In Dateien suchen<br>• View — Verzeichnis anzeigen<br>• LS — Dateien auflisten<br>• Run — Python-Code ausführen<br>• Search — Volltextsuche<br>... (weitere Tools)</span>
+</div>
+</div>
+
+<h3>Kompakte Ansicht mit --simple-mode</h3>
+<p>Für eine schnelle Übersicht ohne Details:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --simple-mode</span><br><br>
+<span class="output">Tools (kompakt):<br>Read, Write, Edit, Bash, Glob, Grep, View, LS, Run, Search, ...</span>
+</div>
+</div>
+
+<h3>MCP-Tools ausblenden mit --no-mcp</h3>
+<p>MCP (Model Context Protocol) Tools können ausgeblendet werden:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Nur Basis-Tools anzeigen, keine MCP-Erweiterungen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --no-mcp</span><br><br>
+<span class="comment"># Kombiniert mit Limit</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --no-mcp --limit 15</span>
+</div>
+</div>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Tool-Kategorien</div>
+<div class="info-box-text">Tools sind in Kategorien wie <strong>file</strong> (Datei-Operationen), <strong>search</strong> (Suche), <strong>exec</strong> (Ausführung) und <strong>mcp</strong> (Erweiterungen) organisiert. Verwende die Suchfunktion, um nach Kategorien zu filtern.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION: FILTER -->
+<section class="section" id="filter">
+<div class="section-header">
+<div class="section-num">🔍</div>
+<div class="section-title-wrap">
+<div class="section-label">Suche & Filter</div>
+<h2 class="section-title">Filtern und Suchen</h2>
+<p class="section-desc">Präzise Suche mit --query und verschiedene Filter-Optionen.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-advanced">Fortgeschritten</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Die Suchfunktion durchsucht Namen, Beschreibungen und Source-Hints. Sie ist case-insensitive und unterstützt Teilwort-Übereinstimmungen.</p>
+
+<h3>Die --query Option</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Nach Git-Befehlen suchen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --query "git"</span><br><br>
+<span class="output">Gefundene Commands (8):<br>• git-commit<br>• git-branch<br>• git-push<br>• git-pull<br>• git-status<br>• git-log<br>• git-diff<br>• git-merge</span><br><br>
+<span class="comment"># Nach Datei-Tools suchen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --query "file"</span><br><br>
+<span class="comment"># Nach "read" suchen (Case-insensitive)</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --query "READ"</span>
+</div>
+</div>
+
+<h3>Plugin-Befehle ausblenden (--no-plugin-commands)</h3>
+<p>Standardmäßig werden auch Plugin-Befehle angezeigt. Um nur Core-Befehle zu sehen:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Nur Core-Befehle, keine Plugins</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --no-plugin-commands</span><br><br>
+<span class="comment"># Kombiniert mit Suche</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --query "commit" --no-plugin-commands</span>
+</div>
+</div>
+
+<h3>Kombinierte Filter-Beispiele</h3>
+
+<div class="option-card">
+<div class="option-card-header">
+<span class="option-name">--query</span>
+<span class="option-type">string</span>
+</div>
+<div class="option-desc">Suchbegriff für Filterung nach Name, Beschreibung oder Source-Hint</div>
+<div class="option-example">
+<code>python3 -m src.main commands --query "branch" --limit 5</code>
+</div>
+</div>
+
+<div class="option-card">
+<div class="option-card-header">
+<span class="option-name">--limit</span>
+<span class="option-type">integer</span>
+</div>
+<div class="option-desc">Begrenzt die Anzahl der angezeigten Ergebnisse</div>
+<div class="option-example">
+<code>python3 -m src.main tools --limit 10</code>
+</div>
+</div>
+
+<div class="option-card">
+<div class="option-card-header">
+<span class="option-name">--no-plugin-commands</span>
+<span class="option-type">flag</span>
+</div>
+<div class="option-desc">Blendet alle Plugin-Befehle aus, zeigt nur Core-Befehle</div>
+<div class="option-example">
+<code>python3 -m src.main commands --no-plugin-commands</code>
+</div>
+</div>
+
+<div class="option-card">
+<div class="option-card-header">
+<span class="option-name">--no-mcp</span>
+<span class="option-type">flag</span>
+</div>
+<div class="option-desc">Blendet alle MCP (Model Context Protocol) Tools aus</div>
+<div class="option-example">
+<code>python3 -m src.main tools --no-mcp</code>
+</div>
+</div>
+
+<div class="option-card">
+<div class="option-card-header">
+<span class="option-name">--simple-mode</span>
+<span class="option-type">flag</span>
+</div>
+<div class="option-desc">Zeigt nur Namen und Kurzbeschreibungen in kompakter Form</div>
+<div class="option-example">
+<code>python3 -m src.main tools --simple-mode --limit 20</code>
+</div>
+</div>
+
+<h3>Komplexe Suchanfragen</h3>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Suche nach "push" in Core-Befehlen, max. 3 Ergebnisse</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --query "push" --no-plugin-commands --limit 3</span><br><br>
+<span class="comment"># Suche nach "read" in Basis-Tools (ohne MCP)</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --query "read" --no-mcp --limit 5</span><br><br>
+<span class="comment"># Alle Datei-bezogenen Core-Befehle kompakt anzeigen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --query "file" --no-plugin-commands --simple-mode</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION: SINGLE -->
+<section class="section" id="single">
+<div class="section-header">
+<div class="section-num">📋</div>
+<div class="section-title-wrap">
+<div class="section-label">Details</div>
+<h2 class="section-title">Einzelne Einträge anzeigen</h2>
+<p class="section-desc">Detaillierte Informationen zu spezifischen Befehlen und Tools abrufen.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Für detaillierte Analysen kannst du einzelne Befehle oder Tools anzeigen lassen. Dies zeigt alle verfügbaren Metadaten, einschließlich Parameter, Beschreibungen und Quellen.</p>
+
+<h3>Befehl-Details mit show-command</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main show-command "commit"</span><br><br>
+<span class="output">Command Details: commit<br>========================<br>Name: commit<br>Responsibility: Creates a commit with the given message<br>Source Hint: src/commands/git.ts<br>Aliases: git-commit, ci<br>Args: ["message", "files"]<br>Category: version-control</span><br><br>
+<span class="comment"># Weitere Beispiele</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main show-command "git-branch"</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main show-command "push"</span>
+</div>
+</div>
+
+<h3>Tool-Details mit show-tool</h3>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main show-tool "Read"</span><br><br>
+<span class="output">Tool Details: Read<br>==================<br>Name: Read<br>Description: Reads the contents of a file<br>Permission Level: read-only<br>Parameters: ["path", "offset", "limit"]<br>Returns: File contents as string</span><br><br>
+<span class="comment"># Weitere Beispiele</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main show-tool "Bash"</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main show-tool "Write"</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main show-tool "Glob"</span>
+</div>
+</div>
+
+<h3>Wichtige Felder in der Detail-Ansicht</h3>
+
+<div class="table-wrap">
+<table>
+<tr><th>Feld</th><th>Bedeutung (Commands)</th><th>Bedeutung (Tools)</th></tr>
+<tr><td><code>name</code></td><td>Eindeutiger Befehlsname</td><td>Eindeutiger Tool-Name</td></tr>
+<tr><td><code>responsibility</code></td><td>Beschreibung der Funktion</td><td>—</td></tr>
+<tr><td><code>description</code></td><td>—</td><td>Beschreibung der Funktion</td></tr>
+<tr><td><code>source_hint</code></td><td>Quelldatei im Original</td><td>—</td></tr>
+<tr><td><code>permission_level</code></td><td>—</td><td>read-only / read-write / dangerous</td></tr>
+<tr><td><code>args</code></td><td>Erwartete Parameter</td><td>—</td></tr>
+<tr><td><code>parameters</code></td><td>—</td><td>Erwartete Parameter</td></tr>
+<tr><td><code>category</code></td><td>Kategorie-Gruppierung</td><td>Kategorie-Gruppierung</td></tr>
+</table>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Namenskonvention</div>
+<div class="info-box-text">Bei <code>show-command</code> und <code>show-tool</code> ist die Groß-/Kleinschreibung wichtig. Verwende die exakte Schreibweise wie im Listing angezeigt. Bei Unsicherheit nutze die Liste mit <code>--query</code> zur Suche.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SECTION: PERMISSIONS -->
+<section class="section" id="permissions">
+<div class="section-header">
+<div class="section-num">🛡️</div>
+<div class="section-title-wrap">
+<div class="section-label">Sicherheit</div>
+<h2 class="section-title">Permission-Optionen</h2>
+<p class="section-desc">Tools blockieren und Berechtigungen für sichere Ausführung kontrollieren.</p>
+<div class="tags">
+<span class="tag tag-advanced">Fortgeschritten</span>
+<span class="tag tag-core">Kern</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Das Permission-System ermöglicht es, bestimmte Tools zu blockieren oder ganze Kategorien auszuschließen. Dies ist besonders wichtig für sichere Umgebungen oder wenn bestimmte Operationen verhindert werden sollen.</p>
+
+<h3>Einzelnes Tool blockieren (--deny-tool)</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Bash-Tool blockieren</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool Bash</span><br><br>
+<span class="comment"># Write-Tool blockieren</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool Write</span><br><br>
+<span class="comment"># Mehrere Tools blockieren</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool Bash --deny-tool Write --deny-tool Edit</span>
+</div>
+</div>
+
+<h3>Nach Präfix blockieren (--deny-prefix)</h3>
+<p>Alle Tools mit einem bestimmten Präfix blockieren:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Alle MCP-Tools blockieren (Präfix "mcp__")</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-prefix mcp__</span><br><br>
+<span class="comment"># Alle "file_"-Tools blockieren</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-prefix file_</span>
+</div>
+</div>
+
+<h3>Permission-Levels verstehen</h3>
+
+<div class="table-wrap">
+<table>
+<tr><th>Level</th><th>Bedeutung</th><th>Beispiele</th></tr>
+<tr><td><span style="color:var(--green)">read-only</span></td><td>Nur lesende Operationen</td><td>Read, Glob, Grep, View</td></tr>
+<tr><td><span style="color:var(--orange)">read-write</span></td><td>Lesen und Schreiben</td><td>Write, Edit</td></tr>
+<tr><td><span style="color:var(--red)">dangerous</span></td><td>Potentiell destruktiv</td><td>Bash, Run (mit Dateisystem-Zugriff)</td></tr>
+</table>
+</div>
+
+<h3>Sicherheits-Best-Practices</h3>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Nur Lesen erlauben</div>
+<div class="step-desc">Für rein informative Analysen blockiere alle write- und dangerous-Tools:<br><code>--deny-tool Write --deny-tool Edit --deny-tool Bash</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">MCP-Tools isolieren</div>
+<div class="step-desc">Externe MCP-Erweiterungen können mit <code>--no-mcp</code> oder <code>--deny-prefix mcp__</code> deaktiviert werden.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Kombinierte Filterung</div>
+<div class="step-desc">Verwende mehrere Permission-Optionen kombiniert für feinere Kontrolle über die Tool-Auswahl.</div>
+</div>
+</div>
+</div>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Beispiel: Maximale Sicherheit</span><br>
+<span class="comment"># - Keine Plugin-Befehle</span><br>
+<span class="comment"># - Keine MCP-Tools</span><br>
+<span class="comment"># - Keine gefährlichen Tools</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools \</span><br>
+<span class="cmd">  --no-mcp \</span><br>
+<span class="cmd">  --deny-tool Bash \</span><br>
+<span class="cmd">  --deny-tool Write \</span><br>
+<span class="cmd">  --deny-tool Edit \</span><br>
+<span class="cmd">  --limit 10</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Zusammenfassung</div>
+<div class="info-box-text">Du kennst jetzt alle Optionen zum Erkunden von Befehlen und Tools:<br>• <code>--limit</code> für begrenzte Ergebnismengen<br>• <code>--query</code> für gezielte Suche<br>• <code>--no-plugin-commands</code> und <code>--no-mcp</code> für Filterung<br>• <code>--deny-tool</code> und <code>--deny-prefix</code> für Permission-Control<br>• <code>show-command</code> und <code>show-tool</code> für Details</div>
+</div>
+</div>
+</div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+<p>&copy; 2026 Belkis Aslani. Alle Rechte vorbehalten.</p>
+<p style="margin-top:.4rem"><a href="../impressum.html">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a> · <a href="../howto.html">Zurück zum How-To</a></p>
+</footer>
+
+</body>
+</html>

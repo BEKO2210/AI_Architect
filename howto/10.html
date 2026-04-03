@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>10 — Eigenes KI-System bauen — Claw Code</title>
+<meta name="description" content="Lerne, wie du mit dem Claw Code Projekt dein eigenes KI-System erstellst: Custom Commands, Tools, Routing-Strategien und neue Subsysteme.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.5rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500}
+.nav-back:hover{color:var(--fg)}
+.nav-howto{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700}
+.nav-howto:hover{background:var(--accent2);color:#fff}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:350px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:520px;margin:0 auto 1.5rem;line-height:1.6}
+.hero-stats{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.hs{text-align:center;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.hs strong{display:block;font-size:1.3rem;color:var(--accent2);letter-spacing:-.02em}
+.hs span{font-size:.6rem;color:var(--fg2);text-transform:uppercase;letter-spacing:.05em}
+
+/* PROGRESS */
+.progress-wrap{max-width:var(--max-w);margin:0 auto;padding:0 1rem 2rem}
+.progress-bar{height:6px;background:var(--bg2);border-radius:100px;overflow:hidden;border:1px solid var(--border)}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s;border-radius:100px}
+.progress-label{display:flex;justify-content:space-between;font-size:.65rem;color:var(--fg2);margin-top:.4rem}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-num{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* TAGS */
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.tag{font-size:.6rem;padding:.2rem .5rem;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tag-beginner{background:var(--green-glow);color:var(--green)}
+.tag-core{background:var(--accent-glow);color:var(--accent2)}
+.tag-advanced{background:var(--orange-glow);color:var(--orange)}
+.tag-time{background:var(--blue-glow);color:var(--blue)}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1rem;font-weight:700;color:var(--fg);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+.content h4{font-size:.9rem;font-weight:700;color:var(--fg);margin:1.25rem 0 .5rem}
+
+/* STEPS */
+.steps{margin:1.5rem 0}
+.step{display:grid;grid-template-columns:2rem 1fr;gap:1rem;margin-bottom:1.5rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.step-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+.step-title{font-weight:700;color:var(--fg);font-size:.9rem;margin-bottom:.4rem}
+.step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.step code{font-size:.8em}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+.info-box.celebrate{background:linear-gradient(135deg,var(--accent-glow2),var(--green-glow));border-color:var(--green)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .highlight{color:var(--accent2)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+
+/* ARCHITECTURE DIAGRAM */
+.arch-diagram{display:grid;gap:1rem;margin:1.5rem 0}
+.arch-layer{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;position:relative}
+.arch-layer::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent);border-radius:var(--radius) 0 0 var(--radius)}
+.arch-layer.infra::before{background:var(--blue)}
+.arch-layer.orchestration::before{background:var(--orange)}
+.arch-layer.mirror::before{background:var(--green)}
+.arch-layer-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--fg);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+.arch-layer-content{font-size:.8rem;color:var(--fg2)}
+.arch-arrow{text-align:center;font-size:1.5rem;color:var(--accent2);margin:-.5rem 0}
+
+/* CODE BLOCK WITH COPY */
+.code-block{position:relative}
+.copy-btn{position:absolute;top:.5rem;right:.5rem;background:var(--bg3);border:1px solid var(--border);color:var(--fg2);padding:.25rem .5rem;border-radius:4px;font-size:.7rem;cursor:pointer;transition:all .2s}
+.copy-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* CHECKLIST */
+.checklist{margin:1rem 0}
+.checklist-item{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.5rem}
+.checklist-item input[type="checkbox"]{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);cursor:pointer}
+.checklist-item label{flex:1;font-size:.85rem;color:var(--fg2);cursor:pointer}
+.checklist-item label strong{color:var(--fg)}
+
+/* RESOURCE CARDS */
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:1.5rem 0}
+.resource-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:all .2s}
+.resource-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.resource-card-icon{font-size:2rem;margin-bottom:.75rem}
+.resource-card-title{font-weight:700;font-size:.95rem;color:var(--fg);margin-bottom:.4rem}
+.resource-card-desc{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.resource-card-link{display:inline-block;margin-top:.75rem;font-size:.75rem;font-weight:600}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-num{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.step{grid-template-columns:2.5rem 1fr;gap:1.25rem}
+.step-num{width:2.5rem;height:2.5rem;font-size:1rem}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<a href="../howto.html" class="nav-back">← Zurück zum How-To</a>
+<div class="nav-howto" title="How-To Guide">10</div>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Abschluss-Sektion · Fortgeschritten</div>
+<h1>10 — Eigenes<br><em>KI-System bauen</em></h1>
+<p class="hero-sub">Herzlichen Glückwunsch! Du hast die Grundlagen gemeistert. Jetzt lernst du, wie du das Claw Code Projekt erweiterst und zu deinem eigenen KI-System machst.</p>
+<div class="hero-stats">
+<div class="hs"><strong>5</strong><span>Erweiterungs-Strategien</span></div>
+<div class="hs"><strong>∞</strong><span>Möglichkeiten</span></div>
+<div class="hs"><strong>Du</strong><span>Bist bereit</span></div>
+</div>
+</header>
+
+<div class="progress-wrap">
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="progress-label"><span>Dein Fortschritt</span><span id="progressText">0%</span></div>
+</div>
+
+<div class="container">
+
+<!-- ARCHITEKTUR-PRINZIPIEN -->
+<section class="section" id="architektur">
+<div class="section-header">
+<div class="section-num">🏗️</div>
+<div class="section-title-wrap">
+<div class="section-label">Grundlagen</div>
+<h2 class="section-title">Architektur-Prinzipien</h2>
+<p class="section-desc">Bevor du eigene Erweiterungen baust, verstehe die Design-Prinzipien, die Claw Code wartbar und erweiterbar machen.</p>
+<div class="tags">
+<span class="tag tag-core">Kernkonzept</span>
+<span class="tag tag-time">10 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Claw Code basiert auf einem <strong>modularen Drei-Schichten-Design</strong>. Wenn du eigene Komponenten hinzufügst, solltest du diese Struktur respektieren — dann bleibt dein Code wartbar und verständlich.</p>
+
+<div class="arch-diagram">
+<div class="arch-layer mirror">
+<div class="arch-layer-title">🪞 Spiegelungsschicht</div>
+<div class="arch-layer-content">
+<strong>Dateien:</strong> <code>commands.py</code>, <code>tools.py</code>, <code>reference_data/</code><br>
+<strong>Zweck:</strong> Unveränderliche JSON-Snapshots als "Quelle der Wahrheit"<br>
+<strong>Regel:</strong> Diese Schicht ändert sich nie zur Laufzeit
+</div>
+</div>
+<div class="arch-arrow">↓</div>
+<div class="arch-layer orchestration">
+<div class="arch-layer-title">⚙️ Orchestrierungsschicht</div>
+<div class="arch-layer-content">
+<strong>Dateien:</strong> <code>runtime.py</code>, <code>query_engine.py</code><br>
+<strong>Zweck:</strong> Intelligentes Routing, Session-Management, Logik<br>
+<strong>Regel:</strong> Hier implementierst du neue Algorithmen
+</div>
+</div>
+<div class="arch-arrow">↓</div>
+<div class="arch-layer infra">
+<div class="arch-layer-title">🔧 Infrastrukturschicht</div>
+<div class="arch-layer-content">
+<strong>Dateien:</strong> <code>setup.py</code>, <code>context.py</code>, <code>session_store.py</code><br>
+<strong>Zweck:</strong> Persistenz, Umgebung, Logging, Bootstrap<br>
+<strong>Regel:</strong> Neue Subsysteme integrieren sich hier
+</div>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Golden Rule</div>
+<div class="info-box-text">Schichten kommunizieren nur nach unten. Die Orchestrierung darf die Infrastruktur nutzen, aber nicht umgekehrt. So vermeidest du zirkuläre Abhängigkeiten.</div>
+</div>
+</div>
+
+<h3>Checkliste: Bereit zum Erweitern?</h3>
+<div class="checklist">
+<div class="checklist-item">
+<input type="checkbox" id="check1" onchange="saveProgress()">
+<label for="check1"><strong>Alle Tests laufen:</strong> <code>python3 -m unittest discover -s tests</code> zeigt nur OKs</label>
+</div>
+<div class="checklist-item">
+<input type="checkbox" id="check2" onchange="saveProgress()">
+<label for="check2"><strong>Verzeichnisstruktur verstanden:</strong> Ich weiß, wo <code>src/</code>, <code>tests/</code> und <code>reference_data/</code> liegen</label>
+</div>
+<div class="checklist-item">
+<input type="checkbox" id="check3" onchange="saveProgress()">
+<label for="check3"><strong>Git-Repository initialisiert:</strong> Ich kann meine Änderungen versionieren</label>
+</div>
+<div class="checklist-item">
+<input type="checkbox" id="check4" onchange="saveProgress()">
+<label for="check4"><strong>Backup erstellt:</strong> Original-Dateien sind gesichert oder ich arbeite in einem Fork</label>
+</div>
+</div>
+</div>
+</section>
+
+<!-- EIGENE BEFEHLE -->
+<section class="section" id="befehle">
+<div class="section-header">
+<div class="section-num">⌨️</div>
+<div class="section-title-wrap">
+<div class="section-label">Erweiterung 1</div>
+<h2 class="section-title">Eigene Befehle hinzufügen</h2>
+<p class="section-desc">Erweitere den Katalog der ~150 Befehle um deine eigenen, maßgeschneiderten Kommandos.</p>
+<div class="tags">
+<span class="tag tag-beginner">Einstieg</span>
+<span class="tag tag-time">15 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Befehle werden in <code>src/reference_data/commands_snapshot.json</code> definiert. Jeder Befehl ist ein JSON-Objekt mit bestimmten Feldern.</p>
+
+<h3>Schritt 1: JSON-Struktur verstehen</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">json — commands_snapshot.json</span>
+</div>
+<div class="terminal-body">
+<span class="output">{<br>&nbsp;&nbsp;"commands": [<br>&nbsp;&nbsp;&nbsp;&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "my-deploy",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"responsibility": "Deployt die Anwendung auf Produktion",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"source_hint": "deploy_module",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"args": ["environment", "version"],<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"description": "Führt den Production-Deployment-Prozess aus"<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;]<br>}</span>
+</div>
+</div>
+
+<h3>Schritt 2: Felder erklärt</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Feld</th><th>Pflicht</th><th>Beschreibung</th></tr>
+<tr><td><code>name</code></td><td>Ja</td><td>Eindeutiger Identifier (keine Leerzeichen)</td></tr>
+<tr><td><code>responsibility</code></td><td>Ja</td><td>Was macht der Befehl? Wird beim Routing gescored</td></tr>
+<tr><td><code>source_hint</code></td><td>Optional</td><td>Modul/Herkunft für Gruppierung</td></tr>
+<tr><td><code>args</code></td><td>Optional</td><td>Liste von Argument-Namen</td></tr>
+<tr><td><code>description</code></td><td>Optional</td><td>Ausführliche Beschreibung</td></tr>
+</table>
+</div>
+
+<h3>Schritt 3: Befehl hinzufügen</h3>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">JSON öffnen</div>
+<div class="step-desc">Öffne <code>src/reference_data/commands_snapshot.json</code> in deinem Editor</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Eintrag hinzufügen</div>
+<div class="step-desc">Füge deinen Befehl zum <code>commands</code>-Array hinzu (vor dem letzten <code>]</code>)</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Validieren</div>
+<div class="step-desc">Teste mit: <code>python3 -m src.main commands --query "dein-befehl"</code></div>
+</div>
+</div>
+</div>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Test: Wird der neue Befehl gefunden?</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --query "deploy"</span><br><br>
+<span class="output">Gefundene Befehle:<br>- my-deploy: Deployt die Anwendung auf Produktion</span><br><br>
+<span class="comment"># Details anzeigen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main show-command "my-deploy"</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Erfolg!</div>
+<div class="info-box-text">Dein Befehl ist jetzt Teil des Systems und wird beim Prompt-Routing berücksichtigt. Das Routing erkennt ihn anhand der <code>responsibility</code> und des <code>name</code>.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- EIGENE TOOLS -->
+<section class="section" id="tools">
+<div class="section-header">
+<div class="section-num">🛠️</div>
+<div class="section-title-wrap">
+<div class="section-label">Erweiterung 2</div>
+<h2 class="section-title">Eigene Tools hinzufügen</h2>
+<p class="section-desc">Tools sind die Aktionen, die dein KI-Agent ausführen kann. Lerne, wie du neue hinzufügst.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-time">15 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Tools unterscheiden sich von Befehlen: Während Befehle <strong>deskriptiv</strong> sind ("was soll passieren"), sind Tools <strong>aktiv</strong> ("was wird ausgeführt").</p>
+
+<h3>Tool-JSON-Struktur</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">json — tools_snapshot.json</span>
+</div>
+<div class="terminal-body">
+<span class="output">{<br>&nbsp;&nbsp;"tools": [<br>&nbsp;&nbsp;&nbsp;&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "DatabaseQuery",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"description": "Führt eine SQL-Abfrage auf der Datenbank aus",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"permission_level": "read-only",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"args": {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"query": "SQL-Query-String",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"database": "Name der Datenbank"<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;]<br>}</span>
+</div>
+</div>
+
+<h3>Permission Levels</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Level</th><th>Bedeutung</th><th>Beispiel</th></tr>
+<tr><td><code>read-only</code></td><td>Nur lesen, keine Änderungen</td><td>Datei lesen, Datenbank-Query</td></tr>
+<tr><td><code>write</code></td><td>Schreiben, aber keine Gefahr</td><td>Datei schreiben, Konfiguration ändern</td></tr>
+<tr><td><code>destructive</code></td><td>Kann Daten zerstören</td><td>Löschen, Formatieren, Drop Table</td></tr>
+<tr><td><code>system</code></td><td>System-weite Änderungen</td><td>Prozesse killen, Neustart</td></tr>
+</table>
+</div>
+
+<h3>Tool mit Permission-Check</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Neues Tool testen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --query "DatabaseQuery"</span><br><br>
+<span class="comment"># Tool blockieren (für sichere Modi)</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool DatabaseQuery</span>
+</div>
+</div>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Sicherheit</div>
+<div class="info-box-text">Wähle das Permission-Level sorgfältig. Das System verwendet es, um zu entscheiden, ob ein Tool in bestimmten Modi (z.B. "Safe Mode") verfügbar ist.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ROUTING-STRATEGIE -->
+<section class="section" id="routing">
+<div class="section-header">
+<div class="section-num">🎯</div>
+<div class="section-title-wrap">
+<div class="section-label">Erweiterung 3</div>
+<h2 class="section-title">Routing-Strategie anpassen</h2>
+<p class="section-desc">Der Routing-Algorithmus entscheidet, welche Befehle und Tools für einen Prompt ausgewählt werden. Passe ihn an deine Bedürfnisse an.</p>
+<div class="tags">
+<span class="tag tag-advanced">Fortgeschritten</span>
+<span class="tag tag-time">25 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Das Herzstück ist <code>PortRuntime.route_prompt()</code> in <code>src/runtime.py</code>. Hier wird entschieden, welche Komponenten für einen Prompt relevant sind.</p>
+
+<h3>Wie der Algorithmus funktioniert</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">python — runtime.py (vereinfacht)</span>
+</div>
+<div class="terminal-body">
+<span class="highlight">def</span> <span class="cmd">route_prompt</span>(self, prompt, limit=5):<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 1. Tokenisieren</span><br>&nbsp;&nbsp;&nbsp;&nbsp;tokens = self._tokenize(prompt)<br>&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 2. Scoren</span><br>&nbsp;&nbsp;&nbsp;&nbsp;scores = []<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">for</span> cmd <span class="highlight">in</span> self.commands:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;score = self._score(tokens, cmd)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;scores.append((cmd, score))<br>&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 3. Sortieren und Limit</span><br>&nbsp;&nbsp;&nbsp;&nbsp;scores.sort(key=<span class="highlight">lambda</span> x: x[1], reverse=<span class="highlight">True</span>)<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">return</span> scores[:limit]
+</div>
+</div>
+
+<h3>Scoring-Funktion anpassen</h3>
+<p>Du kannst die Gewichtung der verschiedenen Felder anpassen:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">python — Beispiel: Angepasstes Scoring</span>
+</div>
+<div class="terminal-body">
+<span class="highlight">def</span> <span class="cmd">_score</span>(self, tokens, entry):<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Original: Gleiche Gewichtung</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Angepasst: Name ist wichtiger</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;score = 0<br>&nbsp;&nbsp;&nbsp;&nbsp;name_tokens = set(entry.name.lower().split())<br>&nbsp;&nbsp;&nbsp;&nbsp;resp_tokens = set(entry.responsibility.lower().split())<br>&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Name: 3x Gewichtung</span><br>&nbsp;&nbsp;&nbsp;&nbsp;score += <span class="highlight">len</span>(tokens & name_tokens) * <span class="highlight">3.0</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Responsibility: 1x Gewichtung</span><br>&nbsp;&nbsp;&nbsp;&nbsp;score += <span class="highlight">len</span>(tokens & resp_tokens) * <span class="highlight">1.0</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">return</span> score / <span class="highlight">len</span>(tokens)
+</div>
+</div>
+
+<h3>Eigene Routing-Strategien</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Strategie</th><th>Anwendungsfall</th><th>Implementierung</th></tr>
+<tr><td><strong>Prefix-Match</strong></td><td>CLI-ähnliche Befehle</td><td>Prüfe ob Prompt mit Befehls-Name startet</td></tr>
+<tr><td><strong>Kategorie-Boost</strong></td><td>Gewisse Tools bevorzugen</td><td>+0.5 Score für bestimmte source_hint</td></tr>
+<tr><td><strong>Kontext-Aware</strong></td><td>Session-History berücksichtigen</td><td>Häufig genutzte Befehle boosten</td></tr>
+<tr><td><strong>Semantic Match</strong></td><td>Synonyme erkennen</td><td>Erweitere Tokens mit Synonymen</td></tr>
+</table>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Testen ist wichtig</div>
+<div class="info-box-text">Nach jeder Änderung am Routing: <code>python3 -m src.main route "dein test prompt"</code>. So siehst du sofort, ob deine Änderung das gewünschte Ergebnis bringt.</div>
+</div>
+</div>
+
+<h3>Route testen</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "Erstelle eine neue Datenbank" --limit 5</span><br><br>
+<span class="output">Routed Matches:<br>1. Command: database-create (Score: 0.92)<br>2. Tool: DatabaseQuery (Score: 0.75)<br>3. Command: setup-db (Score: 0.68)<br>...</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- NEUES SUBSYSTEM -->
+<section class="section" id="subsystem">
+<div class="section-header">
+<div class="section-num">📦</div>
+<div class="section-title-wrap">
+<div class="section-label">Erweiterung 4</div>
+<h2 class="section-title">Neues Subsystem erstellen</h2>
+<p class="section-desc">Ein Subsystem ist ein eigenständiges Modul mit klarer Verantwortung. So erstellst du eins von Grund auf.</p>
+<div class="tags">
+<span class="tag tag-advanced">Fortgeschritten</span>
+<span class="tag tag-time">30 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Subsysteme folgen einem Paket-Muster. Jedes Subsystem ist ein Python-Paket unter <code>src/</code>.</p>
+
+<h3>Schritt-für-Schritt: Subsystem erstellen</h3>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Verzeichnis erstellen</div>
+<div class="step-desc">Erstelle einen neuen Ordner für dein Subsystem</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">mkdir src/mysubsystem</span><br>
+<span class="prompt">$</span> <span class="cmd">touch src/mysubsystem/__init__.py</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">__init__.py erstellen</div>
+<div class="step-desc">Definiere, was exportiert wird</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># src/mysubsystem/__init__.py</span><br>
+<span class="highlight">from</span> .engine <span class="highlight">import</span> MySubsystemEngine<br><br>
+<span class="highlight">__all__</span> = [<span class="highlight">"MySubsystemEngine"</span>]
+</div>
+</div>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Hauptmodul erstellen</div>
+<div class="step-desc">Implementiere die Kernlogik</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># src/mysubsystem/engine.py</span><br><br>
+<span class="highlight">class</span> <span class="cmd">MySubsystemEngine</span>:<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">def</span> <span class="cmd">__init__</span>(self, config=None):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.config = config <span class="highlight">or</span> {}<br>&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">def</span> <span class="cmd">initialize</span>(self):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">pass</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">def</span> <span class="cmd">process</span>(self, data):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">return</span> {<span class="highlight">"result"</span>: <span class="highlight">"processed"</span>}
+</div>
+</div>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<div class="step-title">Integration</div>
+<div class="step-desc">Füge das Subsystem in den Runtime ein</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># In src/runtime.py oder main.py</span><br><br>
+<span class="highlight">from</span> mysubsystem <span class="highlight">import</span> MySubsystemEngine<br><br>
+<span class="highlight">class</span> <span class="cmd">PortRuntime</span>:<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">def</span> <span class="cmd">__init__</span>(self):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.my_engine = MySubsystemEngine()<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.my_engine.initialize()
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<h3>Subsystem-Struktur</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">Verzeichnisstruktur</span>
+</div>
+<div class="terminal-body">
+<span class="output">src/<br>├── mysubsystem/<br>│   ├── __init__.py      # Öffentliche API<br>│   ├── engine.py        # Kern-Implementierung<br>│   ├── models.py        # Datenmodelle<br>│   ├── utils.py         # Hilfsfunktionen<br>│   └── tests.py         # Modul-Tests<br>└── main.py              # Integration</span>
+</div>
+</div>
+
+<h3>Best Practices für Subsysteme</h3>
+<ul>
+<li><strong>Eine Verantwortung:</strong> Ein Subsystem = ein klarer Zweck</li>
+<li><strong>Loose Coupling:</strong> Wenig Abhängigkeiten zu anderen Subsystemen</li>
+<li><strong>Klare API:</strong> Nur notwendige Funktionen in <code>__init__.py</code> exportieren</li>
+<li><strong>Eigene Tests:</strong> Jedes Subsystem hat eigene Unit-Tests</li>
+</ul>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Teste dein Subsystem</div>
+<div class="info-box-text">Führe nach der Integration alle Tests aus: <code>python3 -m unittest discover -s tests</code>. Dein neues Subsystem sollte keine bestehenden Tests zerstören.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- NÄCHSTE SCHRITTE -->
+<section class="section" id="ressourcen">
+<div class="section-header">
+<div class="section-num">🚀</div>
+<div class="section-title-wrap">
+<div class="section-label">Ausblick</div>
+<h2 class="section-title">Nächste Schritte & Ressourcen</h2>
+<p class="section-desc">Du hast alle Grundlagen. Hier sind Ideen und Ressourcen für deine weitere Reise.</p>
+<div class="tags">
+<span class="tag tag-core">Inspiration</span>
+<span class="tag tag-time">∞</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Projekt-Ideen zum Ausprobieren</h3>
+<div class="resource-grid">
+<div class="resource-card">
+<div class="resource-card-icon">🤖</div>
+<div class="resource-card-title">Custom Agent</div>
+<div class="resource-card-desc">Baue einen spezialisierten Agenten für einen bestimmten Workflow (z.B. Code-Review, Dokumentation)</div>
+</div>
+<div class="resource-card">
+<div class="resource-card-icon">🔌</div>
+<div class="resource-card-title">Plugin-System</div>
+<div class="resource-card-desc">Erweitere das System um dynamisch ladbare Plugins aus einem Ordner</div>
+</div>
+<div class="resource-card">
+<div class="resource-card-icon">📊</div>
+<div class="resource-card-title">Analytics Dashboard</div>
+<div class="resource-card-desc">Füge Metriken hinzu: Welche Befehle werden oft geroutet? Wo sind die Engpässe?</div>
+</div>
+<div class="resource-card">
+<div class="resource-card-icon">🌐</div>
+<div class="resource-card-title">Web-Interface</div>
+<div class="resource-card-desc">Baue eine Web-Oberfläche für das Routing-System mit Flask oder FastAPI</div>
+</div>
+<div class="resource-card">
+<div class="resource-card-icon">📝</div>
+<div class="resource-card-title">Prompt-Templates</div>
+<div class="resource-card-desc">Erstelle ein System für wiederverwendbare Prompt-Vorlagen mit Variablen</div>
+</div>
+<div class="resource-card">
+<div class="resource-card-icon">🔗</div>
+<div class="resource-card-title">API-Integration</div>
+<div class="resource-card-desc">Verbinde das System mit einer echten LLM-API (OpenAI, Anthropic, etc.)</div>
+</div>
+</div>
+
+<h3>Wichtige Dateien als Referenz</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Datei</th><th>Wofür</th></tr>
+<tr><td><code>src/main.py</code></td><td>CLI-Entrypoint — hier fügst du neue Befehle hinzu</td></tr>
+<tr><td><code>src/runtime.py</code></td><td>Routing-Logik — hier passt du den Algorithmus an</td></tr>
+<tr><td><code>src/query_engine.py</code></td><td>Session-Management — hier erweiterst du den State</td></tr>
+<tr><td><code>src/commands.py</code></td><td>Befehls-Ladung — hier könntest du dynamische Befehle laden</td></tr>
+<tr><td><code>src/tools.py</code></td><td>Tool-Ladung — hier könntest du externe Tools integrieren</td></tr>
+<tr><td><code>tests/</code></td><td>Tests — hier fügst du Tests für deine Erweiterungen hinzu</td></tr>
+</table>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Tipp: Klein anfangen</div>
+<div class="info-box-text">Fange mit einer kleinen Erweiterung an — einem neuen Befehl oder einem einfachen Tool. Sobald das läuft, wächst dein Vertrauen und Verständnis.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ABSCHLUSS -->
+<section class="section" id="abschluss">
+<div class="section-header">
+<div class="section-num">🎓</div>
+<div class="section-title-wrap">
+<div class="section-label">Abschluss</div>
+<h2 class="section-title">Du hast es geschafft!</h2>
+<p class="section-desc">Von den ersten Terminal-Befehlen bis zum eigenen KI-System — das ist eine beeindruckende Reise.</p>
+<div class="tags">
+<span class="tag tag-beginner">🎉</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<div class="info-box celebrate">
+<div class="info-box-icon">🏆</div>
+<div class="info-box-content">
+<div class="info-box-title">Herzlichen Glückwunsch!</div>
+<div class="info-box-text">
+Du hast den kompletten Claw Code How-To Guide durchgearbeitet. Du verstehst jetzt:<br><br>
+✅ Die Drei-Schichten-Architektur<br>
+✅ Wie Prompt-Routing funktioniert<br>
+✅ Wie Sessions und Turn-Loops arbeiten<br>
+✅ Wie du eigene Befehle, Tools und Subsysteme erstellst<br><br>
+Du bist bereit, deine eigenen Ideen umzusetzen!
+</div>
+</div>
+</div>
+
+<h3>Was jetzt?</h3>
+<ol>
+<li><strong>Experimentiere:</strong> Passe das System an deine Bedürfnisse an</li>
+<li><strong>Dokumentiere:</strong> Schreibe auf, was du gelernt hast</li>
+<li><strong>Teile:</strong> Zeig anderen, was du gebaut hast</li>
+<li><strong>Erweitere:</strong> Füge Features hinzu, die du vermisst</li>
+</ol>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">Deine nächste Sitzung</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap "Baue etwas Grossartiges"</span><br><br>
+<span class="output">Status: Bereit<br>Session: Neuanfang<br>Ziel: Unbegrenzt<br><br>→ Deine Reise beginnt jetzt.</span>
+</div>
+</div>
+
+<p style="text-align:center;margin-top:2rem;font-size:1.1rem;color:var(--fg)">
+<strong>Viel Erfolg mit deinem eigenen KI-System!</strong><br>
+<span style="color:var(--fg2);font-size:.9rem">— Das Claw Code Team</span>
+</p>
+
+<div style="text-align:center;margin-top:2rem">
+<a href="../howto.html" style="display:inline-block;background:var(--accent);color:#fff;padding:.75rem 1.5rem;border-radius:var(--radius-sm);font-weight:600;font-size:.9rem">← Zurück zur Übersicht</a>
+<a href="../index.html" style="display:inline-block;background:var(--bg3);color:var(--fg);padding:.75rem 1.5rem;border-radius:var(--radius-sm);font-weight:600;font-size:.9rem;margin-left:.5rem">Zum Buch →</a>
+</div>
+</div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+<p>&copy; 2026 Belkis Aslani. Alle Rechte vorbehalten.</p>
+<p style="margin-top:.4rem"><a href="../impressum.html">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a> · <a href="../index.html">Zurück zum Buch</a></p>
+</footer>
+
+<script>
+// Fortschrittsbalken basierend auf Scroll-Position
+(function(){
+const progressFill=document.getElementById('progressFill');
+const progressText=document.getElementById('progressText');
+
+function updateProgress(){
+const scrollTop=window.scrollY;
+const docHeight=document.body.scrollHeight-window.innerHeight;
+const scrollPercent=Math.round((scrollTop/docHeight)*100);
+progressFill.style.width=scrollPercent+'%';
+progressText.textContent=scrollPercent+'%';
+}
+
+window.addEventListener('scroll',updateProgress,{passive:true});
+updateProgress();
+})();
+
+// Checklist-Progress speichern
+function saveProgress(){
+const checkboxes=document.querySelectorAll('.checklist-item input[type="checkbox"]');
+checkboxes.forEach((cb,index)=>{
+localStorage.setItem('howto10_check_'+index,cb.checked);
+});
+updateChecklistProgress();
+}
+
+function loadProgress(){
+const checkboxes=document.querySelectorAll('.checklist-item input[type="checkbox"]');
+checkboxes.forEach((cb,index)=>{
+const saved=localStorage.getItem('howto10_check_'+index);
+if(saved!==null)cb.checked=saved==='true';
+});
+updateChecklistProgress();
+}
+
+function updateChecklistProgress(){
+const checkboxes=document.querySelectorAll('.checklist-item input[type="checkbox"]');
+const checked=Array.from(checkboxes).filter(cb=>cb.checked).length;
+const percent=Math.round((checked/checkboxes.length)*100);
+// Optional: Fortschritt irgendwo anzeigen
+}
+
+// Beim Laden der Seite
+loadProgress();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>05 — Prompt-Routing verstehen — Claw Code</title>
+<meta name="description" content="Detaillierte Erklärung des Token-basierten Routing-Algorithmus im Claw Code Projekt. Verstehe Tokenisierung, Scoring und Fair-Share-Prinzip.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--purple:#a855f7;--purple-glow:rgba(168,85,247,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--bg4:#e8e8e8;--fg:#111;--fg2:#666;--accent:#4f46e5;--accent2:#6366f1;--accent-glow:rgba(79,70,229,.08);--green-glow:rgba(34,197,94,.06);--purple-glow:rgba(168,85,247,.06);--border:#e0e0e0;--border2:#d0d0d0}}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500;padding:.25rem .5rem;border:1px solid var(--border);border-radius:5px;transition:all .2s}
+.nav-back:hover{color:var(--fg);border-color:var(--fg2);background:var(--bg2)}
+.nav-chapter{font-size:.7rem;color:var(--fg2);font-weight:600;padding:.25rem .5rem;background:var(--accent-glow);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:5px;color:var(--accent2)}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:520px;margin:0 auto 1.5rem;line-height:1.6}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-icon{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1.05rem;font-weight:700;color:var(--fg);margin:1.75rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:18px;background:linear-gradient(180deg,var(--accent),var(--purple));border-radius:2px}
+.content h4{font-size:.9rem;font-weight:700;color:var(--fg);margin:1.25rem 0 .5rem}
+
+/* ALGORITHM STEPS */
+.algo-steps{margin:1.5rem 0;display:grid;gap:1rem}
+.algo-step{display:flex;gap:1rem;padding:1.25rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);position:relative;overflow:hidden}
+.algo-step::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,var(--accent),var(--purple))}
+.algo-step-num{width:36px;height:36px;border-radius:50%;background:var(--accent-glow);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;color:var(--accent);flex-shrink:0}
+.algo-step-content{flex:1}
+.algo-step-title{font-weight:700;color:var(--fg);font-size:.95rem;margin-bottom:.4rem}
+.algo-step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6;margin-bottom:.5rem}
+.algo-step-code{font-family:var(--mono);font-size:.75rem;background:var(--bg3);padding:.35rem .5rem;border-radius:4px;color:var(--green-light)}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+.info-box.code{background:var(--purple-glow);border-color:var(--purple)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .highlight{color:var(--accent2);font-weight:600}
+
+/* SCORING TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+tr.highlight-row td{background:var(--accent-glow2);color:var(--fg)}
+
+/* TOKEN FLOW */
+.token-flow{display:flex;align-items:center;gap:.5rem;margin:1rem 0;flex-wrap:wrap;justify-content:center;padding:1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius)}
+.token-box{padding:.5rem 1rem;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:var(--mono);font-size:.85rem;color:var(--accent2)}
+.token-arrow{color:var(--fg2);font-size:1.2rem}
+
+/* EXAMPLE CARDS */
+.examples{display:grid;gap:1rem;margin:1.5rem 0}
+.example-card{padding:1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);border-left:4px solid var(--green)}
+.example-card.query{border-left-color:var(--blue)}
+.example-card.result{border-left-color:var(--purple)}
+.example-title{font-weight:700;color:var(--fg);font-size:.85rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.example-content{font-family:var(--mono);font-size:.8rem;color:var(--fg2);line-height:1.6}
+.example-content .score{color:var(--green);font-weight:600}
+.example-content .match{color:var(--accent2)}
+
+/* SCORING DIAGRAM */
+.scoring-diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin:1.5rem 0}
+.score-card{padding:1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);text-align:center}
+.score-card-icon{font-size:1.5rem;margin-bottom:.5rem}
+.score-card-title{font-weight:700;font-size:.8rem;color:var(--fg);margin-bottom:.25rem}
+.score-card-desc{font-size:.7rem;color:var(--fg2)}
+.score-weight{display:inline-block;margin-top:.5rem;padding:.2rem .5rem;background:var(--accent-glow);border-radius:100px;font-size:.65rem;font-weight:700;color:var(--accent2)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* NAV LINKS */
+.page-nav{display:flex;justify-content:space-between;gap:1rem;margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.page-nav-link{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;font-weight:600;transition:all .2s}
+.page-nav-link:hover{border-color:var(--accent);background:var(--bg3)}
+.page-nav-link.prev{padding-left:.75rem}
+.page-nav-link.next{padding-right:.75rem}
+.page-nav-link span{color:var(--fg2);font-weight:400;font-size:.75rem}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-icon{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.algo-step{padding:1.5rem}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<a href="../howto.html" class="nav-back">← How-To Guide</a>
+<span class="nav-chapter">Sektion 05</span>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Kernkonzept · Teil II</div>
+<h1>05 — <em>Prompt-Routing</em><br>verstehen</h1>
+<p class="hero-sub">Wie der Token-basierte Routing-Algorithmus natürliche Sprache in ausführbare Befehle und Tools umwandelt. Tokenisierung, Scoring und Fair-Share-Prinzip im Detail.</p>
+</header>
+
+<div class="container">
+
+<!-- WAS IST PROMPT-ROUTING -->
+<section class="section" id="intro">
+<div class="section-header">
+<div class="section-icon">🎯</div>
+<div class="section-title-wrap">
+<div class="section-label">Grundlagen</div>
+<h2 class="section-title">Was ist Prompt-Routing?</h2>
+<p class="section-desc">Die Brücke zwischen natürlicher Sprache und ausführbaren Systembefehlen.</p>
+</div>
+</div>
+
+<div class="content">
+<p><strong>Prompt-Routing</strong> ist das Herzstück des Claw Code Systems. Es wandelt einen Benutzer-Prompt wie <em>"Erstelle einen neuen Branch für das Login-Feature"</em> in eine geordnete Liste passender Befehle und Tools um.</p>
+
+<p>Das Routing basiert auf einem <strong>Token-basierten Scoring-Algorithmus</strong>, der im <code>PortRuntime.route_prompt()</code> implementiert ist. Statt einfacher String-Suche analysiert das System die semantische Übereinstimmung zwischen Prompt und verfügbaren Kommandos.</p>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Warum Token-basiert?</div>
+<div class="info-box-text">Tokenisierung ermöglicht eine robuste Übereinstimmung, auch wenn Benutzer unterschiedliche Formulierungen verwenden. "git-branch", "git branch" und "branch" werden als gleichwertige Tokens erkannt.</div>
+</div>
+</div>
+
+<h3>Der Tokenisierungs-Prozess</h3>
+<div class="token-flow">
+<span class="token-box">"Erstelle/git-branch"</span>
+<span class="token-arrow">→</span>
+<span class="token-box">["erstelle", "git", "branch"]</span>
+<span class="token-arrow">→</span>
+<span class="token-box">Set{"erstelle", "git", "branch"}</span>
+</div>
+
+<p>Der Prompt wird in eindeutige Tokens umgewandelt, die dann mit den Tokens aller Befehle und Tools verglichen werden.</p>
+</div>
+</section>
+
+<!-- DER ROUTING-ALGORITHMUS -->
+<section class="section" id="algorithm">
+<div class="section-header">
+<div class="section-icon">⚙️</div>
+<div class="section-title-wrap">
+<div class="section-label">Algorithmus</div>
+<h2 class="section-title">Der Routing-Algorithmus</h2>
+<p class="section-desc">4 Phasen von der Eingabe bis zum gerouteten Ergebnis.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Der Routing-Algorithmus arbeitet in vier klar definierten Phasen. Jede Phase transformiert die Daten weiter, bis am Ende eine priorisierte Liste von Matches steht.</p>
+
+<div class="algo-steps">
+<div class="algo-step">
+<div class="algo-step-num">1</div>
+<div class="algo-step-content">
+<div class="algo-step-title">Tokenisierung</div>
+<div class="algo-step-desc">Der Prompt wird normalisiert: Slash und Bindestriche werden in Leerzeichen umgewandelt, alles zu Kleinbuchstaben, Duplikate entfernt.</div>
+<div class="algo-step-code">normalize("git-branch create") → "git branch create"</div>
+</div>
+</div>
+
+<div class="algo-step">
+<div class="algo-step-num">2</div>
+<div class="algo-step-content">
+<div class="algo-step-title">Scoring</div>
+<div class="algo-step-desc">Für jeden Befehl und jedes Tool wird ein Score berechnet. Der Score basiert auf der Überlappung zwischen Prompt-Tokens und Entry-Tokens (Name, Source-Hint, Responsibility).</div>
+<div class="algo-step-code">score = matching_tokens / total_tokens</div>
+</div>
+</div>
+
+<div class="algo-step">
+<div class="algo-step-num">3</div>
+<div class="algo-step-content">
+<div class="algo-step-title">Fair-Share-Selektion</div>
+<div class="algo-step-desc">Der beste Treffer aus jeder Kategorie (Command, Tool) wird garantiert in die Ergebnisliste aufgenommen. Das stellt sicher, dass keine Kategorie übersehen wird.</div>
+<div class="algo-step-code">result = [best_command, best_tool, ...]</div>
+</div>
+</div>
+
+<div class="algo-step">
+<div class="algo-step-num">4</div>
+<div class="algo-step-content">
+<div class="algo-step-title">Auffüllung & Sortierung</div>
+<div class="algo-step-desc">Die verbleibenden Plätze werden mit den nächstbesten Treffern aufgefüllt, sortiert nach Score. Das Limit kann über Parameter konfiguriert werden.</div>
+<div class="algo-step-code">final = sorted(remaining, key=score)[:limit]</div>
+</div>
+</div>
+</div>
+
+<div class="info-box code">
+<div class="info-box-icon">🐍</div>
+<div class="info-box-content">
+<div class="info-box-title">Implementierung in runtime.py</div>
+<div class="info-box-text">Der Algorithmus ist in der Methode <code>PortRuntime.route_prompt(prompt: str, limit: int = 10)</code> implementiert. Die Methode gibt eine Liste von <code>RoutedMatch</code>-Objekten zurück.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TOKENISIERUNG -->
+<section class="section" id="tokenization">
+<div class="section-header">
+<div class="section-icon">🧩</div>
+<div class="section-title-wrap">
+<div class="section-label">Vorverarbeitung</div>
+<h2 class="section-title">Tokenisierung erklärt</h2>
+<p class="section-desc">Wie Text in vergleichbare Einheiten umgewandelt wird.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Tokenisierung ist der Schlüssel zu robustem Text-Matching. Das Claw Code System verwendet eine mehrschrittige Normalisierung, um maximale Flexibilität zu gewährleisten.</p>
+
+<h3>Die 4 Normalisierungsschritte</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Schritt</th><th>Transformation</th><th>Beispiel</th></tr>
+<tr><td>1. Trennzeichen</td><td><code>/</code> und <code>-</code> → Leerzeichen</td><td><code>"git/branch-create"</code> → <code>"git branch create"</code></td></tr>
+<tr><td>2. Whitespace</td><td>Mehrfache Leerzeichen → Einzelnes</td><td><code>"git   branch"</code> → <code>"git branch"</code></td></tr>
+<tr><td>3. Kleinschreibung</td><td>Alle Zeichen lowercase</td><td><code>"Git Branch"</code> → <code>"git branch"</code></td></tr>
+<tr><td>4. Deduplizierung</td><td>Set aus eindeutigen Tokens</td><td><code>["git","git","branch"]</code> → <code>{"git","branch"}</code></td></tr>
+</table>
+</div>
+
+<h3>Token-Quellen für Entries</h3>
+<p>Jeder Befehl und jedes Tool hat mehrere Text-Quellen, die tokenisiert werden:</p>
+
+<ul>
+<li><strong>Name</strong> — Der eindeutige Identifier (<code>"git-branch"</code>)</li>
+<li><strong>Source-Hint</strong> — Woher der Befehl stammt (<code>"git_commands"</code>)</li>
+<li><strong>Responsibility</strong> — Was der Befehl tut (<code>"Create and manage branches"</code>)</li>
+</ul>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">python</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Beispiel: Tokenisierung eines Befehls</span><br>
+Befehl: git-branch<br>
+Name-Tokens: {"git", "branch"}<br>
+Source-Tokens: {"git", "commands"}<br>
+Responsibility-Tokens: {"create", "and", "manage", "branches"}<br><br>
+<span class="comment"># Kombinierte Token-Menge</span><br>
+Entry-Tokens: {"git", "branch", "commands", "create", "manage", "branches"}
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Performance-Optimierung</div>
+<div class="info-box-text">Alle Befehls- und Tool-Tokens werden beim Systemstart vor-tokenisiert und im Speicher gehalten. Das Routing ist daher extrem schnell, auch mit ~150 Befehlen und ~100 Tools.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SCORING-MECHANISMUS -->
+<section class="section" id="scoring">
+<div class="section-header">
+<div class="section-icon">📊</div>
+<div class="section-title-wrap">
+<div class="section-label">Bewertung</div>
+<h2 class="section-title">Scoring-Mechanismus</h2>
+<p class="section-desc">Wie die Übereinstimmung zwischen Prompt und Entry berechnet wird.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Das Scoring ist das mathematische Herz des Routing-Algorithmus. Es quantifiziert, wie gut ein Prompt zu einem bestimmten Befehl oder Tool passt.</p>
+
+<h3>Die Scoring-Formel</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">algorithm</span>
+</div>
+<div class="terminal-body">
+score(prompt_tokens, entry_tokens) = |prompt_tokens ∩ entry_tokens| / |prompt_tokens|<br><br>
+<span class="comment"># Beispiel-Rechnung</span><br>
+Prompt: "create new git branch"<br>
+Prompt-Tokens: {"create", "new", "git", "branch"}<br><br>
+Entry: git-branch<br>
+Entry-Tokens: {"git", "branch", "create", "manage", "branches"}<br><br>
+Intersection: {"create", "git", "branch"} → 3 Tokens<br>
+Score: 3 / 4 = <span class="highlight">0.75</span>
+</div>
+</div>
+
+<h3>Gewichtung der Token-Quellen</h3>
+<p>Nicht alle Tokens sind gleich wichtig. Der Algorithmus wendet implizite Gewichtungen an:</p>
+
+<div class="scoring-diag">
+<div class="score-card">
+<div class="score-card-icon">🏷️</div>
+<div class="score-card-title">Name</div>
+<div class="score-card-desc">Exakte Befehlsnamen haben höchste Priorität</div>
+<span class="score-weight">1.0×</span>
+</div>
+<div class="score-card">
+<div class="score-card-icon">📦</div>
+<div class="score-card-title">Source-Hint</div>
+<div class="score-card-desc">Herkunft des Befehls (z.B. "git")</div>
+<span class="score-weight">0.8×</span>
+</div>
+<div class="score-card">
+<div class="score-card-icon">📝</div>
+<div class="score-card-title">Responsibility</div>
+<div class="score-card-desc">Beschreibung der Funktionalität</div>
+<span class="score-weight">0.6×</span>
+</div>
+</div>
+
+<h3>Score-Interpretation</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Score-Bereich</th><th>Bedeutung</th><th>Beispiel</th></tr>
+<tr class="highlight-row"><td>0.9 – 1.0</td><td>Exakter/exakter naher Treffer</td><td>Prompt: "git commit" → Befehl: git-commit</td></tr>
+<tr><td>0.7 – 0.9</td><td>Sehr gute Übereinstimmung</td><td>Prompt: "commit changes" → Befehl: git-commit</td></tr>
+<tr><td>0.5 – 0.7</td><td>Gute Übereinstimmung</td><td>Prompt: "save code" → Befehl: git-commit</td></tr>
+<tr><td>0.3 – 0.5</td><td>Mittelmäßige Übereinstimmung</td><td>Prompt: "update repo" → Befehl: git-pull</td></tr>
+<tr><td>0.0 – 0.3</td><td>Schwache Übereinstimmung</td><td>Prompt: "hello world" → Befehl: git-commit</td></tr>
+</table>
+</div>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Score ist relativ</div>
+<div class="info-box-text">Der Score hängt von der Länge des Prompts ab. Ein langer Prompt mit vielen Tokens kann nie einen perfekten Score erreichen, selbst wenn alle relevanten Keywords enthalten sind. Betrachte den Score immer im Kontext der anderen Ergebnisse.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PRAKTISCHE BEISPIELE -->
+<section class="section" id="examples">
+<div class="section-header">
+<div class="section-icon">🔍</div>
+<div class="section-title-wrap">
+<div class="section-label">Anwendung</div>
+<h2 class="section-title">Praktische Beispiele</h2>
+<p class="section-desc">Konkrete Routing-Szenarien und ihre Ergebnisse.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Hier sind vier typische Routing-Szenarien, die zeigen, wie der Algorithmus verschiedene Prompts verarbeitet.</p>
+
+<h3>Beispiel 1: Git-Operation</h3>
+<div class="examples">
+<div class="example-card query">
+<div class="example-title">🔎 Prompt</div>
+<div class="example-content">"Erstelle einen neuen Branch für das Login-Feature"</div>
+</div>
+<div class="example-card result">
+<div class="example-title">✅ Top-Matches</div>
+<div class="example-content">
+1. <span class="match">git-branch</span> — <span class="score">Score: 0.67</span> ("git", "branch", "create")<br>
+2. <span class="match">git-checkout</span> — <span class="score">Score: 0.33</span> ("branch")<br>
+3. <span class="match">Bash</span> — <span class="score">Score: 0.22</span> ("create")
+</div>
+</div>
+</div>
+
+<h3>Beispiel 2: Datei-Operation</h3>
+<div class="examples">
+<div class="example-card query">
+<div class="example-title">🔎 Prompt</div>
+<div class="example-content">"Lies den Inhalt der package.json Datei"</div>
+</div>
+<div class="example-card result">
+<div class="example-title">✅ Top-Matches</div>
+<div class="example-content">
+1. <span class="match">Read</span> — <span class="score">Score: 0.80</span> ("read", "file")<br>
+2. <span class="match">Grep</span> — <span class="score">Score: 0.40</span> ("file")<br>
+3. <span class="match">Glob</span> — <span class="score">Score: 0.40</span> ("file", "json")
+</div>
+</div>
+</div>
+
+<h3>Beispiel 3: Code-Analyse</h3>
+<div class="examples">
+<div class="example-card query">
+<div class="example-title">🔎 Prompt</div>
+<div class="example-content">"Analysiere die Codebasis nach Fehlern"</div>
+</div>
+<div class="example-card result">
+<div class="example-title">✅ Top-Matches</div>
+<div class="example-content">
+1. <span class="match">parity-audit</span> — <span class="score">Score: 0.50</span> ("code", "audit")<br>
+2. <span class="match">summary</span> — <span class="score">Score: 0.50</span> ("code", "analyze")<br>
+3. <span class="match">Grep</span> — <span class="score">Score: 0.40</span> ("search", "code")
+</div>
+</div>
+</div>
+
+<h3>Beispiel 4: Mehrdeutiger Prompt</h3>
+<div class="examples">
+<div class="example-card query">
+<div class="example-title">🔎 Prompt</div>
+<div class="example-content">"commit"</div>
+</div>
+<div class="example-card result">
+<div class="example-title">✅ Top-Matches</div>
+<div class="example-content">
+1. <span class="match">git-commit</span> — <span class="score">Score: 1.00</span> (exakter Match)<br>
+2. <span class="match">git-push</span> — <span class="score">Score: 0.00</span> (verwandt, aber kein Token-Match)<br>
+3. <span class="match">Bash</span> — <span class="score">Score: 0.00</span>
+</div>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Bessere Ergebnisse durch präzisere Prompts</div>
+<div class="info-box-text">Je spezifischer der Prompt, desto besser das Routing. Statt <code>"commit"</code> lieber <code>"commit changes to git"</code> verwenden, um Verwechslungen zu vermeiden und den gewünschten Kontext zu liefern.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ROUTE BEFEHL -->
+<section class="section" id="route-command">
+<div class="section-header">
+<div class="section-icon">🖥️</div>
+<div class="section-title-wrap">
+<div class="section-label">CLI</div>
+<h2 class="section-title">route-Befehl verwenden</h2>
+<p class="section-desc">Interaktives Testen des Routing-Algorithmus.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Der <code>route</code>-Befehl ermöglicht es, den Routing-Algorithmus direkt zu testen und zu verstehen, wie Prompts verarbeitet werden.</p>
+
+<h3>Grundlegende Verwendung</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Einen Prompt routen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "Erstelle einen neuen Branch"</span><br><br>
+<span class="output">Routed Matches (Top 10):<br><br>1. [COMMAND] git-branch — Score: 0.67<br>   Tokens matched: git, branch, create<br><br>2. [TOOL] Bash — Score: 0.33<br>   Tokens matched: create<br><br>3. [COMMAND] git-checkout — Score: 0.33<br>   Tokens matched: branch</span>
+</div>
+</div>
+
+<h3>Optionen und Parameter</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Parameter</th><th>Beschreibung</th><th>Standard</th></tr>
+<tr><td><code>--limit N</code></td><td>Anzahl der zurückgegebenen Matches</td><td>10</td></tr>
+<tr><td><code>--min-score 0.X</code></td><td>Minimaler Score für Ergebnisse</td><td>0.0</td></tr>
+<tr><td><code>--json</code></td><td>Ausgabe als JSON</td><td>false</td></tr>
+<tr><td><code>--no-tools</code></td><td>Nur Befehle zurückgeben</td><td>false</td></tr>
+<tr><td><code>--no-commands</code></td><td>Nur Tools zurückgeben</td><td>false</td></tr>
+</table>
+</div>
+
+<h3>Erweiterte Beispiele</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Limit auf 5 Ergebnisse setzen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "Lies die Datei" --limit 5</span><br><br>
+<span class="comment"># Nur Befehle, kein Tool-Routing</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "Speichern" --no-tools</span><br><br>
+<span class="comment"># JSON-Ausgabe für Weiterverarbeitung</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "Analyse" --json | jq '.matches[0]'</span><br><br>
+<span class="comment"># Minimaler Score von 0.5</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "commit" --min-score 0.5</span>
+</div>
+</div>
+
+<h3>Debugging mit dem route-Befehl</h3>
+<p>Der route-Befehl ist ein wertvolles Werkzeug zum Debugging:</p>
+
+<ul>
+<li><strong>Warum wurde ein Befehl nicht gefunden?</strong> → Prüfe die Token-Überschneidung</li>
+<li><strong>Wie kann ich den Score verbessern?</strong> → Füge Keywords aus Name/Source/Responsibility hinzu</li>
+<li><strong>Welche Befehle sind für ein Thema verfügbar?</strong> → Teste mit generischen Prompts</li>
+</ul>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Alle git-bezogenen Befehle finden</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "git" --no-tools --limit 20</span><br><br>
+<span class="output">1. git-branch — Score: 1.00<br>2. git-commit — Score: 1.00<br>3. git-checkout — Score: 1.00<br>4. git-push — Score: 1.00<br>5. git-pull — Score: 1.00<br>...</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Pro-Tipp: Routing in Scripts verwenden</div>
+<div class="info-box-text">Nutze die <code>--json</code>-Option, um Routing-Ergebnisse in Shell-Scripts oder andere Programme zu integrieren. Die JSON-Ausgabe enthält alle Metadaten zu den Matches.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ZUSAMMENFASSUNG -->
+<section class="section" id="summary">
+<div class="section-header">
+<div class="section-icon">🎓</div>
+<div class="section-title-wrap">
+<div class="section-label">Zusammenfassung</div>
+<h2 class="section-title">Wichtigste Konzepte</h2>
+<p class="section-desc">Die Schlüsselelemente des Prompt-Routing im Überblick.</p>
+</div>
+</div>
+
+<div class="content">
+<div class="scoring-diag">
+<div class="score-card">
+<div class="score-card-icon">🔄</div>
+<div class="score-card-title">4-Phasen-Algorithmus</div>
+<div class="score-card-desc">Tokenisierung → Scoring → Fair-Share → Auffüllung</div>
+</div>
+<div class="score-card">
+<div class="score-card-icon">🧮</div>
+<div class="score-card-title">Token-basiertes Matching</div>
+<div class="score-card-desc">Normalisierung und Mengen-Operationen für robuste Übereinstimmung</div>
+</div>
+<div class="score-card">
+<div class="score-card-icon">⚖️</div>
+<div class="score-card-title">Fair-Share-Prinzip</div>
+<div class="score-card-desc">Jede Kategorie (Commands, Tools) ist garantiert vertreten</div>
+</div>
+<div class="score-card">
+<div class="score-card-icon">📏</div>
+<div class="score-card-title">Score 0.0 – 1.0</div>
+<div class="score-card-desc">Relative Übereinstimmung basierend auf Token-Schnittmenge</div>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">🎉</div>
+<div class="info-box-content">
+<div class="info-box-title">Du verstehst jetzt Prompt-Routing!</div>
+<div class="info-box-text">Mit diesem Wissen kannst du effektivere Prompts formulieren, das System debuggen und eigene Routing-Strategien entwickeln. Probiere den <code>route</code>-Befehl mit verschiedenen Prompts aus, um das Verhalten zu erkunden.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PAGE NAVIGATION -->
+<div class="page-nav">
+<a href="../howto.html#s5" class="page-nav-link prev">← <span>Zurück zur Übersicht</span></a>
+<a href="04.html" class="page-nav-link next"><span>Nächstes Kapitel</span> →</a>
+</div>
+
+</div><!-- /container -->
+
+<footer>
+<p>Claw Code — Architektur eines KI-Agent-Harness<br><a href="../howto.html">Zurück zum How-To Guide</a></p>
+</footer>
+
+</body>
+</html>

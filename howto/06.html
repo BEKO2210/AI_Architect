@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>06 — Sessions & Bootstrap — Claw Code How-To</title>
+<meta name="description" content="Eine vollständige Laufzeitsitzung aufbauen, persistieren und wiederherstellen. Der Session-Lebenszyklus im Detail erklärt.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--purple:#a855f7;--purple-glow:rgba(168,85,247,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.5rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500}
+.nav-back:hover{color:var(--fg)}
+.nav-howto{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700}
+.nav-howto:hover{background:var(--accent2);color:#fff}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:480px;margin:0 auto 1.5rem;line-height:1.6}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-num{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1rem;font-weight:700;color:var(--fg);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+.content h4{font-size:.9rem;font-weight:700;color:var(--fg);margin:1.25rem 0 .5rem}
+
+/* LIFECYCLE DIAGRAM */
+.lifecycle{display:flex;flex-direction:column;gap:0;margin:1.5rem 0;position:relative}
+.lifecycle-step{display:flex;align-items:stretch;gap:0;position:relative}
+.lifecycle-connector{position:absolute;left:24px;top:48px;bottom:-24px;width:2px;background:linear-gradient(180deg,var(--accent),var(--accent2));z-index:1}
+.lifecycle-step:last-child .lifecycle-connector{display:none}
+.lifecycle-icon{width:50px;height:50px;border-radius:50%;background:var(--bg3);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.2rem;z-index:2;flex-shrink:0}
+.lifecycle-content{flex:1;padding:0 0 1.5rem 1.25rem}
+.lifecycle-title{font-weight:700;color:var(--fg);font-size:.95rem;margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem}
+.lifecycle-title::after{content:"";flex:1;height:1px;background:var(--border);margin-left:.5rem}
+.lifecycle-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.lifecycle-code{font-family:var(--mono);font-size:.75rem;background:var(--bg2);padding:.15rem .4rem;border-radius:4px;color:var(--accent2);margin-top:.5rem;display:inline-block}
+
+/* FLOW DIAGRAM */
+.flow-diagram{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin:1.5rem 0}
+.flow-row{display:flex;align-items:center;justify-content:center;gap:.5rem;margin:.5rem 0;flex-wrap:wrap}
+.flow-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.75rem 1rem;text-align:center;min-width:120px}
+.flow-box.highlight{background:var(--accent-glow);border-color:var(--accent)}
+.flow-box.success{background:var(--green-glow);border-color:var(--green)}
+.flow-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.flow-box strong{display:block;font-size:.85rem;color:var(--fg)}
+.flow-box span{font-size:.7rem;color:var(--fg2)}
+.flow-arrow{font-size:1.2rem;color:var(--accent)}
+.flow-arrow.down{transform:rotate(90deg)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .highlight{color:var(--accent2)}
+.terminal-body .success{color:var(--green-light)}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+.info-box.purple{background:var(--purple-glow);border-color:var(--purple)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+
+/* SESSION ID BOX */
+.session-id-box{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin:1rem 0;text-align:center}
+.session-id-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--fg2);margin-bottom:.5rem}
+.session-id-value{font-family:var(--mono);font-size:1.1rem;color:var(--accent2);letter-spacing:.05em;background:var(--bg);padding:.5rem 1rem;border-radius:var(--radius-sm);display:inline-block;border:1px solid var(--border)}
+
+/* STEPS */
+.steps{margin:1.5rem 0}
+.step{display:grid;grid-template-columns:2rem 1fr;gap:1rem;margin-bottom:1.5rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.step-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+.step-title{font-weight:700;color:var(--fg);font-size:.9rem;margin-bottom:.4rem}
+.step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.step code{font-size:.8em}
+
+/* TAGS */
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.tag{font-size:.6rem;padding:.2rem .5rem;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tag-core{background:var(--accent-glow);color:var(--accent2)}
+.tag-time{background:var(--blue-glow);color:var(--blue)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-num{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.lifecycle-icon{width:56px;height:56px;font-size:1.4rem}
+.lifecycle-connector{left:27px;top:54px}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+.flow-row{flex-wrap:nowrap}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<a href="../howto.html" class="nav-back">← Zurück zum How-To</a>
+<a href="../howto.html" class="nav-howto" title="Zurück zur Übersicht">06</a>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Teil II — Kern-Features</div>
+<h1>06 — Sessions <em>&amp; Bootstrap</em></h1>
+<p class="hero-sub">Eine vollständige Laufzeitsitzung aufbauen, persistieren und wiederherstellen. Der komplette Session-Lebenszyklus im Detail.</p>
+</header>
+
+<div class="container">
+
+<!-- WAS IST EINE SESSION -->
+<section class="section" id="was-ist-session">
+<div class="section-header">
+<div class="section-num">?</div>
+<div class="section-title-wrap">
+<div class="section-label">Grundlagen</div>
+<h2 class="section-title">Was ist eine Session?</h2>
+<p class="section-desc">Der zentrale Zustandscontainer für alle Agent-Interaktionen.</p>
+<div class="tags">
+<span class="tag tag-core">Kernkonzept</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Eine <strong>Session</strong> (Sitzung) ist das Herzstück des Claw Code Systems. Sie speichert alle Informationen, die während einer Interaktion mit dem KI-Agenten anfallen — vom ersten Prompt bis zur finalen Antwort.</p>
+
+<h3>Komponenten einer Session</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Komponente</th><th>Beschreibung</th><th>Beispiel</th></tr>
+<tr><td><strong>Session-ID</strong></td><td>Eindeutiger Identifikator</td><td><code>sess_abc123xyz</code></td></tr>
+<tr><td><strong>Transkript</strong></td><td>Chronologische Nachrichtenhistorie</td><td>User-Prompts, Assistant-Antworten</td></tr>
+<tr><td><strong>Workspace-Kontext</strong></td><td>Informationen über die Umgebung</td><td>Pfad, Dateianzahl, Git-Status</td></tr>
+<tr><td><strong>Metadaten</strong></td><td>Zusätzliche Session-Informationen</td><td>Erstellungszeit, letzte Aktivität</td></tr>
+<tr><td><strong>Budget-Tracker</strong></td><td>Token-Verbrauch überwachen</td><td>Input/Output/Total</td></tr>
+</table>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Vergleich: Session vs. Conversation</div>
+<div class="info-box-text">Eine <strong>Conversation</strong> ist nur das Transkript (die Nachrichten). Eine <strong>Session</strong> enthält zusätzlich den Workspace-Kontext, Metadaten und Persistenz-Informationen. Sessions sind "Conversations plus Kontext".</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SESSION-LEBENSZYKLUS -->
+<section class="section" id="lebenszyklus">
+<div class="section-header">
+<div class="section-num">1</div>
+<div class="section-title-wrap">
+<div class="section-label">Die 4 Phasen</div>
+<h2 class="section-title">Session-Lebenszyklus</h2>
+<p class="section-desc">Create → Process → Compact → Persist → Load</p>
+<div class="tags">
+<span class="tag tag-core">Kernkonzept</span>
+<span class="tag tag-time">10 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Der Lebenszyklus einer Session durchläuft vier klar definierte Phasen. Jede Phase hat einen spezifischen Zweck und spezifische Methoden.</p>
+
+<h3>Die 4 Phasen im Überblick</h3>
+<div class="lifecycle">
+<div class="lifecycle-step">
+<div class="lifecycle-connector"></div>
+<div class="lifecycle-icon">🆕</div>
+<div class="lifecycle-content">
+<div class="lifecycle-title">1. Create — Sitzung erstellen</div>
+<div class="lifecycle-desc">
+Eine neue Session wird aus dem Workspace-Kontext initialisiert. Der <code>QueryEnginePort</code> sammelt Informationen über das aktuelle Arbeitsverzeichnis und erzeugt eine eindeutige Session-ID.
+<div class="lifecycle-code">QueryEnginePort.from_workspace()</div>
+</div>
+</div>
+</div>
+
+<div class="lifecycle-step">
+<div class="lifecycle-connector"></div>
+<div class="lifecycle-icon">⚙️</div>
+<div class="lifecycle-content">
+<div class="lifecycle-title">2. Process — Prompt verarbeiten</div>
+<div class="lifecycle-desc">
+Der Benutzer sendet einen Prompt. Das System routed ihn an passende Befehle und Tools, führt die Aktionen aus und aktualisiert das Transkript mit der Antwort.
+<div class="lifecycle-code">submit_message() → route_prompt()</div>
+</div>
+</div>
+</div>
+
+<div class="lifecycle-step">
+<div class="lifecycle-connector"></div>
+<div class="lifecycle-icon">🗜️</div>
+<div class="lifecycle-content">
+<div class="lifecycle-title">3. Compact — Kompaktierung</div>
+<div class="lifecycle-desc">
+Wenn das Transkript zu groß wird (Token-Limit erreicht), wird es automatisch komprimiert. Ältere Nachrichten werden zusammengefasst oder entfernt, wichtige Kontextinformationen bleiben erhalten.
+<div class="lifecycle-code">compact_messages_if_needed()</div>
+</div>
+</div>
+</div>
+
+<div class="lifecycle-step">
+<div class="lifecycle-icon">💾</div>
+<div class="lifecycle-content">
+<div class="lifecycle-title">4. Persist — Speichern &amp; Laden</div>
+<div class="lifecycle-desc">
+Die Session wird in <code>.port_sessions/</code> persistiert und kann später über die Session-ID wieder geladen werden. Das ermöglicht Unterbrechungen und Fortsetzungen langer Arbeitsabläufe.
+<div class="lifecycle-code">flush-transcript → load-session</div>
+</div>
+</div>
+</div>
+</div>
+
+<h3>Visueller Ablauf</h3>
+<div class="flow-diagram">
+<div class="flow-row">
+<div class="flow-box"><strong>Workspace</strong><span>Erkennen</span></div>
+<span class="flow-arrow">→</span>
+<div class="flow-box highlight"><strong>Create Session</strong><span>sess_xxx</span></div>
+<span class="flow-arrow">→</span>
+<div class="flow-box"><strong>Process</strong><span>Prompt → Routing</span></div>
+</div>
+<div class="flow-row">
+<span class="flow-arrow down">↓</span>
+</div>
+<div class="flow-row">
+<div class="flow-box"><strong>Load</strong><span>Wiederherstellen</span></div>
+<span class="flow-arrow">←</span>
+<div class="flow-box success"><strong>Persist</strong><span>.port_sessions/</span></div>
+<span class="flow-arrow">←</span>
+<div class="flow-box warning"><strong>Compact</strong><span>Token-Limit?</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- BOOTSTRAP -->
+<section class="section" id="bootstrap">
+<div class="section-header">
+<div class="section-num">2</div>
+<div class="section-title-wrap">
+<div class="section-label">Ausführung</div>
+<h2 class="section-title">Bootstrap ausführen</h2>
+<p class="section-desc">Eine vollständige Session mit einem einzigen Befehl starten.</p>
+<div class="tags">
+<span class="tag tag-core">CLI</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Der <code>bootstrap</code>-Befehl ist der Haupteinstiegspunkt für vollständige Agent-Sitzungen. Er kombiniert Session-Erstellung, Prompt-Routing und Ausführung in einem Schritt.</p>
+
+<h3>Bootstrap-Grundbefehl</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Vollständige Session starten</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap <span class="highlight">"Analysiere die Codebasis"</span></span><br><br>
+<span class="output">╔════════════════════════════════════════════════╗</span><br>
+<span class="output">║         Claw Code — Session-Bericht           ║</span><br>
+<span class="output">╚════════════════════════════════════════════════╝</span><br><br>
+<span class="success">Session-ID:</span> <span class="highlight">sess_abc123xyz</span><br>
+<span class="success">Commands matched:</span> 5<br>
+<span class="success">Tools matched:</span> 3<br>
+<span class="success">Status:</span> success<br>
+<span class="success">Duration:</span> 1.2s
+</div>
+</div>
+
+<h3>Was passiert beim Bootstrap?</h3>
+<ol>
+<li><strong>Workspace-Erkennung</strong> — Das System analysiert das aktuelle Verzeichnis</li>
+<li><strong>Session-Initialisierung</strong> — Eine neue Session mit eindeutiger ID wird erstellt</li>
+<li><strong>Prompt-Routing</strong> — Der Prompt wird tokenisiert und an passende Befehle/Tools gerouted</li>
+<li><strong>Ausführung</strong> — Die Matches werden ausgeführt und Ergebnisse generiert</li>
+<li><strong>Transkript-Update</strong> — Die Interaktion wird im Session-Transkript gespeichert</li>
+</ol>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Wichtig</div>
+<div class="info-box-text">Der Bootstrap-Befehl erstellt eine <strong>neue Session</strong>. Wenn du eine bestehende Session fortsetzen möchtest, verwende <code>load-session</code> (siehe unten).</div>
+</div>
+</div>
+
+<h4>Bootstrap mit Optionen</h4>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Mit benutzerdefiniertem Limit für Matches</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap "Erstelle Tests" --limit 10</span><br><br>
+<span class="comment"># Strukturierte JSON-Ausgabe</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap "Refaktoriere" --json</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FLUSH-TRANSCRIPT -->
+<section class="section" id="flush">
+<div class="section-header">
+<div class="section-num">3</div>
+<div class="section-title-wrap">
+<div class="section-label">Persistenz</div>
+<h2 class="section-title">Session speichern (flush-transcript)</h2>
+<p class="section-desc">Das Transkript persistieren und eine Session-ID erhalten.</p>
+<div class="tags">
+<span class="tag tag-core">Persistenz</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Das <code>flush-transcript</code>-Kommando speichert die aktuelle Session auf der Festplatte. Dies ist essenziell, um Arbeit zu sichern und später fortzusetzen.</p>
+
+<h3>Flush-Transcript Befehl</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Aktuelle Session speichern</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main flush-transcript <span class="highlight">"Meine Analyse-Session"</span></span><br><br>
+<span class="output">💾 Transkript gespeichert</span><br>
+<span class="success">Session-ID:</span> <span class="highlight">sess_abc123xyz</span><br>
+<span class="success">Pfad:</span> .port_sessions/sess_abc123xyz.json<br>
+<span class="success">Nachrichten:</span> 12<br>
+<span class="success">Größe:</span> 4.2 KB
+</div>
+</div>
+
+<h3>Was wird gespeichert?</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Feld</th><th>Beschreibung</th></tr>
+<tr><td><code>session_id</code></td><td>Eindeutige Session-Identifikation</td></tr>
+<tr><td><code>title</code></td><td>Vom Benutzer vergebener Titel</td></tr>
+<tr><td><code>messages</code></td><td>Alle Nachrichten im Transkript</td></tr>
+<tr><td><code>workspace_context</code></td><td>Pfad, Dateien, Git-Status</td></tr>
+<tr><td><code>created_at</code></td><td>Zeitstempel der Erstellung</td></tr>
+<tr><td><code>updated_at</code></td><td>Zeitstempel der letzten Änderung</td></tr>
+<tr><td><code>metadata</code></td><td>Zusätzliche Session-Informationen</td></tr>
+</table>
+</div>
+
+<h3>Speicherort</h3>
+<p>Sessions werden im Verzeichnis <code>.port_sessions/</code> im Projekt-Root gespeichert. Jede Session ist eine separate JSON-Datei:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">ls -la .port_sessions/</span><br><br>
+<span class="output">sess_abc123xyz.json</span><br>
+<span class="output">sess_def456uvw.json</span><br>
+<span class="output">sess_ghi789rst.json</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Best Practice</div>
+<div class="info-box-text">Gib deinen Sessions aussagekräftige Titel mit <code>flush-transcript</code>. So findest du später schnell die richtige Session wieder.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- LOAD-SESSION -->
+<section class="section" id="load">
+<div class="section-header">
+<div class="section-num">4</div>
+<div class="section-title-wrap">
+<div class="section-label">Wiederherstellung</div>
+<h2 class="section-title">Session laden (load-session)</h2>
+<p class="section-desc">Eine gespeicherte Session wiederherstellen und fortsetzen.</p>
+<div class="tags">
+<span class="tag tag-core">Persistenz</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Mit <code>load-session</code> kannst du eine zuvor gespeicherte Session wiederherstellen und genau dort weitermachen, wo du aufgehört hast.</p>
+
+<h3>Load-Session Befehl</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Session anhand ID laden</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main load-session <span class="highlight">sess_abc123xyz</span></span><br><br>
+<span class="output">📂 Session geladen</span><br>
+<span class="success">Titel:</span> Meine Analyse-Session<br>
+<span class="success">Nachrichten:</span> 12<br>
+<span class="success">Erstellt:</span> 2026-04-01 14:30<br>
+<span class="success">Status:</span> Bereit für neue Nachrichten
+</div>
+</div>
+
+<h3>Ablauf beim Laden</h3>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">JSON-Datei lesen</div>
+<div class="step-desc">Das System öffnet <code>.port_sessions/sess_xxx.json</code> und parst die Session-Daten.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Session-Objekt rekonstruieren</div>
+<div class="step-desc">Ein <code>QueryEnginePort</code>-Objekt wird mit allen gespeicherten Daten initialisiert.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Workspace-Kontext validieren</div>
+<div class="step-desc">Das System prüft, ob sich der Workspace seit dem Speichern verändert hat.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<div class="step-title">Bereit für neue Nachrichten</div>
+<div class="step-desc">Die Session ist nun aktiv und kann neue Prompts entgegennehmen.</div>
+</div>
+</div>
+</div>
+
+<h3>Sessions auflisten</h3>
+<p>Um alle verfügbaren Sessions zu sehen:</p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">ls .port_sessions/</span><br><br>
+<span class="comment"># oder detaillierter:</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main list-sessions</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SESSION-ID ERKLÄRT -->
+<section class="section" id="session-id">
+<div class="section-header">
+<div class="section-num">5</div>
+<div class="section-title-wrap">
+<div class="section-label">Referenz</div>
+<h2 class="section-title">Session-ID erklärt</h2>
+<p class="section-desc">Aufbau und Bedeutung der Session-Identifikation.</p>
+<div class="tags">
+<span class="tag tag-core">Referenz</span>
+<span class="tag tag-time">2 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<p>Die Session-ID ist der Schlüssel zur Wiederherstellung deiner Arbeit. Sie wird automatisch generiert und ist innerhalb deines Systems eindeutig.</p>
+
+<div class="session-id-box">
+<div class="session-id-label">Session-ID Format</div>
+<div class="session-id-value">sess_abc123xyz</div>
+</div>
+
+<h3>Aufbau der Session-ID</h3>
+<div class="table-wrap">
+<table>
+<tr><th>Teil</th><th>Beschreibung</th><th>Beispiel</th></tr>
+<tr><td><strong>Präfix</strong></td><td>Identifiziert den Typ</td><td><code>sess_</code> = Session</td></tr>
+<tr><td><strong>Body</strong></td><td>Zufällige alphanumerische Zeichen</td><td><code>abc123xyz</code></td></tr>
+</table>
+</div>
+
+<h3>Wann wird eine Session-ID generiert?</h3>
+<ul>
+<li><strong>Bootstrap</strong> — Neue Session wird erstellt</li>
+<li><strong>Flush-Transcript</strong> — Session wird erstmalig persistiert</li>
+<li><strong>Manuelle Erstellung</strong> — Über die API/Programmatisch</li>
+</ul>
+
+<h3>Session-ID speichern</h3>
+<p>Notiere dir die Session-ID nach dem Bootstrap oder Flush-Transcript. Sie wird im Terminal angezeigt:</p>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Kopiere die ID direkt aus der Ausgabe</span><br>
+<span class="success">Session-ID:</span> <span class="highlight">sess_abc123xyz</span><br><br>
+<span class="comment"># Oder speichere sie in einer Variable</span><br>
+<span class="prompt">$</span> <span class="cmd">SESSION_ID=$(python3 -m src.main bootstrap "Test" | grep "Session-ID" | awk '{print $2}')</span>
+</div>
+</div>
+
+<div class="info-box purple">
+<div class="info-box-icon">🔑</div>
+<div class="info-box-content">
+<div class="info-box-title">Session-ID = Wiederherstellungsschlüssel</div>
+<div class="info-box-text">Ohne die Session-ID kannst du eine persistierte Session nicht wieder laden. Sie ist das einzige Bindeglied zwischen Speichern und Laden.</div>
+</div>
+</div>
+
+<h3>Vollständiges Beispiel</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash — Vollständiger Workflow</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># 1. Neue Session starten</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap "Analysiere src/"</span><br>
+<span class="success">Session-ID:</span> <span class="highlight">sess_abc123xyz</span><br><br>
+
+<span class="comment"># 2. Weitere Interaktionen...</span><br>
+<span class="comment"># (Prompts senden, Ergebnisse erhalten)</span><br><br>
+
+<span class="comment"># 3. Session speichern</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main flush-transcript "Code-Analyse vom 3.4."</span><br>
+<span class="success">Session-ID:</span> <span class="highlight">sess_abc123xyz</span><br><br>
+
+<span class="comment"># 4. Später: Session wiederherstellen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main load-session sess_abc123xyz</span><br>
+<span class="output">📂 Session "Code-Analyse vom 3.4." geladen</span><br><br>
+
+<span class="comment"># 5. Weitermachen wo du aufgehört hast</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap "Fahre mit der Analyse fort"</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ZUSAMMENFASSUNG -->
+<section class="section" id="zusammenfassung">
+<div class="section-header">
+<div class="section-num">✓</div>
+<div class="section-title-wrap">
+<div class="section-label">Abschluss</div>
+<h2 class="section-title">Zusammenfassung</h2>
+<p class="section-desc">Die wichtigsten Befehle im Überblick.</p>
+</div>
+</div>
+
+<div class="content">
+<div class="table-wrap">
+<table>
+<tr><th>Befehl</th><th>Zweck</th><th>Wichtige Ausgabe</th></tr>
+<tr><td><code>bootstrap "Prompt"</code></td><td>Neue Session erstellen &amp; Prompt verarbeiten</td><td>Session-ID</td></tr>
+<tr><td><code>flush-transcript "Titel"</code></td><td>Session persistieren</td><td>Session-ID, Pfad</td></tr>
+<tr><td><code>load-session ID</code></td><td>Gespeicherte Session laden</td><td>Session-Status</td></tr>
+</table>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">🎉</div>
+<div class="info-box-content">
+<div class="info-box-title">Abschnitt 06 abgeschlossen!</div>
+<div class="info-box-text">Du verstehst nun den Session-Lebenszyklus, kannst Sessions erstellen, speichern und laden. Damit hast du die Kernkonzepte der Claw Code Persistenz beherrscht.</div>
+</div>
+</div>
+
+<p style="text-align:center;margin-top:2rem">
+<a href="../howto.html" style="display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-weight:600">← Zurück zum How-To</a>
+</p>
+</div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+<p>&copy; 2026 Belkis Aslani. Alle Rechte vorbehalten.</p>
+<p style="margin-top:.4rem"><a href="../impressum.html">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a> · <a href="../index.html">Zurück zum Buch</a></p>
+</footer>
+
+</body>
+</html>

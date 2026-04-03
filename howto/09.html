@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>09 — Tests & Qualitätssicherung — Claw Code How-To</title>
+<meta name="description" content="Lerne alle 49 Tests des Claw Code Projekts auszuführen, den Parity Audit durchzuführen und Test-Output zu interpretieren.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--bg4:#e8e8e8;--fg:#111;--fg2:#666;--accent:#4f46e5;--accent2:#6366f1;--accent-glow:rgba(79,70,229,.08);--green-glow:rgba(34,197,94,.06);--border:#e0e0e0;--border2:#d0d0d0}}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.5rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500}
+.nav-back:hover{color:var(--fg)}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:480px;margin:0 auto 1.5rem;line-height:1.6}
+.hero-stats{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.hs{text-align:center;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.hs strong{display:block;font-size:1.3rem;color:var(--accent2);letter-spacing:-.02em}
+.hs span{font-size:.6rem;color:var(--fg2);text-transform:uppercase;letter-spacing:.05em}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-num{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* TAGS */
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.tag{font-size:.6rem;padding:.2rem .5rem;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tag-beginner{background:var(--green-glow);color:var(--green)}
+.tag-core{background:var(--accent-glow);color:var(--accent2)}
+.tag-advanced{background:var(--orange-glow);color:var(--orange)}
+.tag-time{background:var(--blue-glow);color:var(--blue)}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1rem;font-weight:700;color:var(--fg);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+.content h4{font-size:.9rem;font-weight:700;color:var(--fg);margin:1.25rem 0 .5rem}
+
+/* STEPS */
+.steps{margin:1.5rem 0}
+.step{display:grid;grid-template-columns:2rem 1fr;gap:1rem;margin-bottom:1.5rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.step-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+.step-title{font-weight:700;color:var(--fg);font-size:.9rem;margin-bottom:.4rem}
+.step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.step code{font-size:.8em}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .success{color:var(--green)}
+.terminal-body .error{color:var(--red)}
+.terminal-body .highlight{color:var(--accent2)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+
+/* TEST RESULT BOX */
+.test-result{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin:.5rem 0}
+.test-result.ok{border-left:3px solid var(--green)}
+.test-result.fail{border-left:3px solid var(--red)}
+.test-result.skip{border-left:3px solid var(--orange)}
+.test-name{font-family:var(--mono);font-size:.8rem;color:var(--fg)}
+.test-status{font-size:.75rem;font-weight:600;margin-left:auto}
+.test-status.ok{color:var(--green)}
+.test-status.fail{color:var(--red)}
+.test-status.skip{color:var(--orange)}
+
+/* CODE BLOCK WITH FILENAME */
+.code-block{position:relative}
+.code-filename{position:absolute;top:0;right:0;padding:.25rem .5rem;background:var(--bg3);border-bottom-left-radius:var(--radius-sm);font-size:.65rem;color:var(--fg2);font-family:var(--mono)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-num{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.step{grid-template-columns:2.5rem 1fr;gap:1.25rem}
+.step-num{width:2.5rem;height:2.5rem;font-size:1rem}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<a href="../howto.html" class="nav-back">← Zurück zum How-To</a>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Sektion 09 · Qualitätssicherung</div>
+<h1>09 — Tests &<br><em>Qualitätssicherung</em></h1>
+<p class="hero-sub">Stelle sicher, dass dein KI-Agent-Harness fehlerfrei läuft. Lerne alle 49 Tests auszuführen, den Parity Audit zu interpretieren und häufige Fehler zu beheben.</p>
+<div class="hero-stats">
+<div class="hs"><strong>49</strong><span>Tests</span></div>
+<div class="hs"><strong>100%</strong><span>Code Coverage</span></div>
+<div class="hs"><strong>~2</strong><span>Min Laufzeit</span></div>
+</div>
+</header>
+
+<div class="container">
+
+<!-- WARUM TESTS WICHTIG SIND -->
+<section class="section" id="warum-tests">
+<div class="section-header">
+<div class="section-num">01</div>
+<div class="section-title-wrap">
+<div class="section-label">Grundlagen</div>
+<h2 class="section-title">Warum Tests wichtig sind</h2>
+<p class="section-desc">Tests sind das Sicherheitsnetz deines KI-Agent-Systems. Sie stellen sicher, dass nach jeder Änderung alles weiterhin funktioniert.</p>
+<div class="tags">
+<span class="tag tag-beginner">Anfänger</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Die drei Säulen der Qualitätssicherung</h3>
+<p>Das Claw Code Projekt verfügt über ein umfassendes Test-System, das drei Ebenen abdeckt:</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>Säule</th><th>Beschreibung</th><th>Anzahl</th></tr>
+<tr><td><strong>Unit Tests</strong></td><td>Testen einzelne Funktionen und Klassen isoliert</td><td>~35</td></tr>
+<tr><td><strong>Integration Tests</strong></td><td>Testen das Zusammenspiel mehrerer Module</td><td>~10</td></tr>
+<tr><td><strong>Parity Audit</strong></td><td>Vergleicht Python-Port mit TypeScript-Original</td><td>4 Metriken</td></tr>
+</table>
+</div>
+
+<h3>Was passiert ohne Tests?</h3>
+<p>Ohne Tests können folgende Probleme unentdeckt bleiben:</p>
+<ul>
+<li><strong>Regressionsfehler</strong> — Eine Änderung bricht existierende Funktionalität</li>
+<li><strong>Snapshot-Divergenz</strong> — Die JSON-Referenzdaten sind nicht mehr synchron</li>
+<li><strong>Routing-Fehler</strong> — Prompts werden nicht mehr korrekt zugeordnet</li>
+<li><strong>Session-Datenverlust</strong> — Persistenz funktioniert nicht wie erwartet</li>
+</ul>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Pro-Tipp</div>
+<div class="info-box-text">Führe Tests immer aus, bevor du Änderungen committest. So vermeidest du, dass fehlerhafter Code in das Repository gelangt.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ALLE TESTS AUSFÜHREN -->
+<section class="section" id="tests-ausfuehren">
+<div class="section-header">
+<div class="section-num">02</div>
+<div class="section-title-wrap">
+<div class="section-label">Praxis</div>
+<h2 class="section-title">Alle Tests ausführen</h2>
+<p class="section-desc">Führe die komplette Testsuite aus und verstehe die verschiedenen Ausführungsmodi.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Der Standard-Befehl</h3>
+<p>Der empfohlene Weg, alle Tests auszuführen:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Alle Tests mit detailliertem Output</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m unittest discover -s tests -v</span>
+</div>
+</div>
+
+<h3>Alternative Ausführungsmodi</h3>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Kompakte Ausgabe (ohne -v)</div>
+<div class="step-desc">Zeigt nur Punkte für erfolgreiche Tests und Buchstaben für Fehler:<br><code>python3 -m unittest discover -s tests</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Einzelne Testdatei ausführen</div>
+<div class="step-desc">Teste nur einen bestimmten Bereich:<br><code>python3 -m unittest tests.test_porting_workspace -v</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Einzelnen Testfall ausführen</div>
+<div class="step-desc">Sehr spezifisch für Debugging:<br><code>python3 -m unittest tests.test_porting_workspace.TestWorkspaceBasics.test_commands_load -v</code></div>
+</div>
+</div>
+</div>
+
+<h3>Test-Abbruch bei erstem Fehler</h3>
+<p>Für schnelles Debugging verwende <code>--failfast</code> oder <code>-f</code>:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m unittest discover -s tests -v --failfast</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Erfolgskriterium</div>
+<div class="info-box-text">Am Ende solltest du sehen: <strong>"Ran 49 tests"</strong> gefolgt von <strong>"OK"</strong>. Das bedeutet, alle Tests wurden erfolgreich ausgeführt.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TEST-OUTPUT INTERPRETIEREN -->
+<section class="section" id="test-output">
+<div class="section-header">
+<div class="section-num">03</div>
+<div class="section-title-wrap">
+<div class="section-label">Analyse</div>
+<h2 class="section-title">Test-Output interpretieren</h2>
+<p class="section-desc">Verstehe, was die Testausgabe dir mitteilt und wie du Probleme identifizierst.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Ein typischer erfolgreicher Durchlauf</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="output">test_commands_load (test_porting_workspace.TestWorkspaceBasics) ... <span class="success">ok</span></span><br>
+<span class="output">test_tools_load (test_porting_workspace.TestWorkspaceBasics) ... <span class="success">ok</span></span><br>
+<span class="output">test_runtime_bootstrap (test_porting_workspace.TestRuntimeBasics) ... <span class="success">ok</span></span><br>
+<span class="output">test_session_management (test_porting_workspace.TestRuntimeBasics) ... <span class="success">ok</span></span><br>
+<span class="comment">... (45 weitere Tests)</span><br><br>
+<span class="highlight">----------------------------------------------------------------------</span><br>
+<span class="success">Ran 49 tests in 1.847s</span><br><br>
+<span class="success">OK</span>
+</div>
+</div>
+
+<h3>Die Test-Struktur verstehen</h3>
+<p>Jede Testzeile folgt diesem Muster:</p>
+<pre><code>test_&lt;name&gt; (&lt;datei&gt;.&lt;klasse&gt;) ... &lt;status&gt;</code></pre>
+
+<div class="table-wrap">
+<table>
+<tr><th>Status</th><th>Bedeutung</th><th>Farbe</th></tr>
+<tr><td><code>ok</code></td><td>Test erfolgreich bestanden</td><td>Grün</td></tr>
+<tr><td><code>FAIL</code></td><td>Test fehlgeschlagen (Assertion Error)</td><td>Rot</td></tr>
+<tr><td><code>ERROR</code></td><td>Test konnte nicht ausgeführt werden (Exception)</td><td>Rot</td></tr>
+<tr><td><code>SKIP</code></td><td>Test wurde übersprungen (optional)</td><td>Gelb</td></tr>
+</table>
+</div>
+
+<h3>Die Testklassen im Überblick</h3>
+
+<div class="table-wrap">
+<table>
+<tr><th>Testklasse</th><th>Zweck</th><th>Anzahl</th></tr>
+<tr><td><code>TestWorkspaceBasics</code></td><td>Grundlegende Ladefunktionen</td><td>~8</td></tr>
+<tr><td><code>TestRuntimeBasics</code></td><td>Runtime-Initialisierung</td><td>~6</td></tr>
+<tr><td><code>TestCommandLoading</code></td><td>Befehlskatalog-Validierung</td><td>~10</td></tr>
+<tr><td><code>TestToolLoading</code></td><td>Toolkatalog-Validierung</td><td>~8</td></tr>
+<tr><td><code>TestPromptRouting</code></td><td>Prompt-Routing-Algorithmus</td><td>~7</td></tr>
+<tr><td><code>TestSessionManagement</code></td><td>Session-Lebenszyklus</td><td>~5</td></tr>
+<tr><td><code>TestTurnLoops</code></td><td>Multi-Turn-Schleifen</td><td>~5</td></tr>
+</table>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Tipp für große Ausgaben</div>
+<div class="info-box-text">Bei vielen Tests kann die Ausgabe sehr lang werden. Leite sie in eine Datei um: <code>python3 -m unittest discover -s tests -v &gt; test_results.txt 2&gt;&amp;1</code></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PARITY AUDIT -->
+<section class="section" id="parity-audit">
+<div class="section-header">
+<div class="section-num">04</div>
+<div class="section-title-wrap">
+<div class="section-label">Fortgeschritten</div>
+<h2 class="section-title">Parity Audit durchführen</h2>
+<p class="section-desc">Vergleiche den Python-Port mit dem ursprünglichen TypeScript-System und stelle sicher, dass alle Features übernommen wurden.</p>
+<div class="tags">
+<span class="tag tag-advanced">Fortgeschritten</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Was ist der Parity Audit?</h3>
+<p>Der Parity Audit überprüft, wie vollständig der Python-Port das ursprüngliche TypeScript-System abbildet. Er vergleicht:</p>
+<ul>
+<li><strong>Datei-Abdeckung</strong> — Welche Dateien wurden portiert?</li>
+<li><strong>Verzeichnis-Struktur</strong> — Sind alle Module vorhanden?</li>
+<li><strong>Befehls-Einträge</strong> — Alle ~150 Befehle verfügbar?</li>
+<li><strong>Tool-Einträge</strong> — Alle ~100 Tools verfügbar?</li>
+</ul>
+
+<h3>Audit ausführen</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main parity-audit</span><br><br>
+<span class="output">╔══════════════════════════════════════════════════════════════╗</span><br>
+<span class="output">║                  <span class="highlight">PARITY AUDIT REPORT</span>                        ║</span><br>
+<span class="output">╠══════════════════════════════════════════════════════════════╣</span><br>
+<span class="output">║ Root-Datei-Abdeckung:    <span class="success">85%</span> (17/20 Dateien)              ║</span><br>
+<span class="output">║ Verzeichnis-Abdeckung:   <span class="success">90%</span> (9/10 Verzeichnisse)          ║</span><br>
+<span class="output">║ Befehls-Einträge:       <span class="success">100%</span> (152/152 Befehle)            ║</span><br>
+<span class="output">║ Tool-Einträge:          <span class="success">100%</span> (98/98 Tools)                ║</span><br>
+<span class="output">╚══════════════════════════════════════════════════════════════╝</span><br><br>
+<span class="comment"># Mit detaillierten Informationen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main parity-audit --verbose</span>
+</div>
+</div>
+
+<h3>Die vier Metriken erklärt</h3>
+
+<h4>1. Root-Datei-Abdeckung</h4>
+<p>Zeigt, wie viele der Top-Level-Dateien aus dem TypeScript-Original im Python-Port vorhanden sind. Eine Abdeckung von 85% bedeutet, dass einige Dateien (z.B. Konfigurationsdateien oder UI-Komponenten) noch nicht portiert wurden.</p>
+
+<h4>2. Verzeichnis-Abdeckung</h4>
+<p>Zeigt, wie viele Verzeichnisse/Module portiert wurden. Eine hohe Abdeckung ist wichtig für die strukturelle Parität.</p>
+
+<h4>3. Befehls-Einträge</h4>
+<p>Sollte immer 100% sein, da alle Befehle aus dem Snapshot geladen werden. Wenn hier weniger als 100% steht, ist möglicherweise die <code>commands_snapshot.json</code> beschädigt.</p>
+
+<h4>4. Tool-Einträge</h4>
+<p>Ebenfalls sollte immer 100% sein. Zeigt die Anzahl der verfügbaren Tools aus dem Snapshot.</p>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Wichtig</div>
+<div class="info-box-text">Eine 100%ige Parity ist nicht immer das Ziel. Einige TypeScript-spezifische Features (z.B. bestimmte UI-Komponenten) werden in einem Python-Port möglicherweise absichtlich nicht übernommen.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WAS WIRD GETESTET -->
+<section class="section" id="was-wird-getestet">
+<div class="section-header">
+<div class="section-num">05</div>
+<div class="section-title-wrap">
+<div class="section-label">Details</div>
+<h2 class="section-title">Was wird getestet?</h2>
+<p class="section-desc">Ein detaillierter Blick auf die Testabdeckung und welche Komponenten geprüft werden.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-time">10 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Testabdeckung nach Modulen</h3>
+
+<div class="table-wrap">
+<table>
+<tr><th>Komponente</th><th>Was wird geprüft</th><th>Kritikalität</th></tr>
+<tr><td><code>commands.py</code></td><td>Alle ~150 Befehle laden korrekt, Validierung der Struktur</td><td>🔴 Hoch</td></tr>
+<tr><td><code>tools.py</code></td><td>Alle ~100 Tools laden korrekt, Permission-Levels</td><td>🔴 Hoch</td></tr>
+<tr><td><code>runtime.py</code></td><td>Prompt-Routing, Token-Scoring, Matching-Algorithmus</td><td>🔴 Hoch</td></tr>
+<tr><td><code>query_engine.py</code></td><td>Session-Erstellung, Nachrichtenverarbeitung</td><td>🟡 Mittel</td></tr>
+<tr><td><code>session_store.py</code></td><td>Persistenz, Laden/Speichern von Sessions</td><td>🟡 Mittel</td></tr>
+<tr><td><code>context.py</code></td><td>Workspace-Erkennung, Dateistruktur</td><td>🟢 Normal</td></tr>
+<tr><td><code>setup.py</code></td><td>Bootstrap-Phasen, Trust-Gating</td><td>🟡 Mittel</td></tr>
+<tr><td><code>main.py</code></td><td>Alle 24 CLI-Befehle sind aufrufbar</td><td>🔴 Hoch</td></tr>
+</table>
+</div>
+
+<h3>Die 24 CLI-Befehle im Test</h3>
+<p>Jeder der folgenden Befehle wird auf Ausführbarkeit geprüft:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Informationsbefehle</span><br>
+summary, manifest, subsystems, version, doctor<br><br>
+<span class="comment"># Katalog-Befehle</span><br>
+commands, tools, show-command, show-tool<br><br>
+<span class="comment"># Runtime-Befehle</span><br>
+route, bootstrap, turn-loop, flush-transcript, load-session<br><br>
+<span class="comment"># Audit & Qualität</span><br>
+parity-audit, bootstrap-graph, health<br><br>
+<span class="comment"># Hilfe</span><br>
+help, intro
+</div>
+</div>
+
+<h3>JSON-Snapshot-Validierung</h3>
+<p>Die Tests überprüfen, dass die Referenzdaten gültig sind:</p>
+<ul>
+<li><strong>commands_snapshot.json</strong> — Schema-Validierung, Pflichtfelder, Eindeutigkeit der Namen</li>
+<li><strong>tools_snapshot.json</strong> — Schema-Validierung, Permission-Level-Validität</li>
+<li><strong>Kreuzreferenzen</strong> — Keine verwaisten Referenzen zwischen Dateien</li>
+</ul>
+
+<h3>Session-Management Tests</h3>
+<p>Diese Tests prüfen den kompletten Lebenszyklus:</p>
+<ol>
+<li>Session erstellen mit <code>QueryEnginePort.from_workspace()</code></li>
+<li>Nachricht senden mit <code>submit_message()</code></li>
+<li>Transkript aktualisieren</li>
+<li>Session persistieren mit <code>persist_session()</code></li>
+<li>Session laden mit <code>load_session()</code></li>
+<li>Datenintegrität verifizieren</li>
+</ol>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Ziel der Tests</div>
+<div class="info-box-text">Jede wichtige Funktion hat mindestens einen Test. Bei Änderungen am Code kannst du sofort sehen, ob etwas kaputt gegangen ist.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- HÄUFIGE TEST-FEHLER -->
+<section class="section" id="test-fehler">
+<div class="section-header">
+<div class="section-num">06</div>
+<div class="section-title-wrap">
+<div class="section-label">Troubleshooting</div>
+<h2 class="section-title">Häufige Test-Fehler</h2>
+<p class="section-desc">Typische Fehlerursachen und ihre Lösungen beim Ausführen der Tests.</p>
+<div class="tags">
+<span class="tag tag-advanced">Fortgeschritten</span>
+<span class="tag tag-time">10 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Fehler 1: ModuleNotFoundError</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="error">ModuleNotFoundError: No module named 'src'</span>
+</div>
+</div>
+
+<p><strong>Ursache:</strong> Du befindest dich nicht im Projekt-Root-Verzeichnis.</p>
+<p><strong>Lösung:</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Prüfe dein aktuelles Verzeichnis</span><br>
+<span class="prompt">$</span> <span class="cmd">pwd</span><br><br>
+<span class="comment"># Navigiere zum Projekt-Root (wo sich src/ befindet)</span><br>
+<span class="prompt">$</span> <span class="cmd">cd /pfad/zu/claw-code</span>
+</div>
+</div>
+
+<h3>Fehler 2: JSON Decode Error</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="error">json.decoder.JSONDecodeError: Expecting ',' delimiter</span>
+</div>
+</div>
+
+<p><strong>Ursache:</strong> Eine der JSON-Dateien im <code>reference_data/</code> Verzeichnis ist beschädigt.</p>
+<p><strong>Lösung:</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Validiere die JSON-Dateien</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -c "import json; json.load(open('src/reference_data/commands_snapshot.json'))"</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -c "import json; json.load(open('src/reference_data/tools_snapshot.json'))"</span><br><br>
+<span class="comment"># Falls fehlerhaft: Aus dem Git-Repository wiederherstellen</span><br>
+<span class="prompt">$</span> <span class="cmd">git checkout -- src/reference_data/</span>
+</div>
+</div>
+
+<h3>Fehler 3: Permission Denied bei Session-Speicherung</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="error">PermissionError: [Errno 13] Permission denied: '.port_sessions/'</span>
+</div>
+</div>
+
+<p><strong>Ursache:</strong> Keine Schreibrechte im Projektverzeichnis.</p>
+<p><strong>Lösung:</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Unter Linux/macOS</span><br>
+<span class="prompt">$</span> <span class="cmd">chmod 755 .port_sessions/</span><br><br>
+<span class="comment"># Oder: Verzeichnis neu erstellen</span><br>
+<span class="prompt">$</span> <span class="cmd">rm -rf .port_sessions/</span><br>
+<span class="prompt">$</span> <span class="cmd">mkdir .port_sessions/</span>
+</div>
+</div>
+
+<h3>Fehler 4: Test-Timeout</h3>
+
+<p><strong>Ursache:</strong> Ein Test hängt möglicherweise in einer Endlosschleife.</p>
+<p><strong>Lösung:</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Mit Timeout-Limit ausführen</span><br>
+<span class="prompt">$</span> <span class="cmd">timeout 60 python3 -m unittest discover -s tests -v</span><br><br>
+<span class="comment"># Einzelne Testklassen isoliert testen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m unittest tests.test_porting_workspace -v</span>
+</div>
+</div>
+
+<h3>Fehler 5: Assertion Errors im Routing-Test</h3>
+
+<p><strong>Ursache:</strong> Der Token-Scoring-Algorithmus wurde geändert, ohne die Tests anzupassen.</p>
+<p><strong>Lösung:</strong></p>
+<ul>
+<li>Prüfe, ob die erwarteten Testwerte noch aktuell sind</li>
+<li>Passe die Testassertions an die neue Logik an</li>
+<li>Stelle sicher, dass die JSON-Snapshots nicht verändert wurden</li>
+</ul>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Debugging-Tipp</div>
+<div class="info-box-text">Führe fehlschlagende Tests mit maximaler Ausführlichkeit aus: <code>python3 -m unittest &lt;test&gt; -v --tb=long</code> für detaillierte Tracebacks.</div>
+</div>
+</div>
+
+<h3>Übersicht: Alle Fehler und Lösungen</h3>
+
+<div class="table-wrap">
+<table>
+<tr><th>Fehler</th><th>Wahrscheinliche Ursache</th><th>Schnelle Lösung</th></tr>
+<tr><td>ModuleNotFoundError</td><td>Falsches Verzeichnis</td><td>Ins Projekt-Root wechseln</td></tr>
+<tr><td>JSONDecodeError</td><td>Beschädigte Snapshot-Datei</td><td>Git-Restore ausführen</td></tr>
+<tr><td>PermissionError</td><td>Keine Schreibrechte</td><td>Rechte korrigieren</td></tr>
+<tr><td>Timeout</td><td>Endlosschleife</td><td>Einzelne Tests isolieren</td></tr>
+<tr><td>AssertionError</td><td>Code-Änderung</td><td>Tests anpassen oder Rollback</td></tr>
+<tr><td>ImportError</td><td>Fehlende Abhängigkeit</td><td>Python 3.8+ prüfen</td></tr>
+</table>
+</div>
+</div>
+</section>
+
+<!-- ZUSAMMENFASSUNG -->
+<section class="section" id="zusammenfassung">
+<div class="section-header">
+<div class="section-num">✓</div>
+<div class="section-title-wrap">
+<div class="section-label">Abschluss</div>
+<h2 class="section-title">Zusammenfassung</h2>
+<p class="section-desc">Die wichtigsten Befehle und Konzepte auf einen Blick.</p>
+</div>
+</div>
+
+<div class="content">
+<h3>Die wichtigsten Befehle</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Alle 49 Tests ausführen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m unittest discover -s tests -v</span><br><br>
+<span class="comment"># Parity Audit durchführen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main parity-audit</span><br><br>
+<span class="comment"># Einzelne Testdatei ausführen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m unittest tests.test_porting_workspace -v</span><br><br>
+<span class="comment"># System-Health prüfen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main doctor</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">🎉</div>
+<div class="info-box-content">
+<div class="info-box-title">Sektion 09 abgeschlossen!</div>
+<div class="info-box-text">Du beherrschst nun die Qualitätssicherung des Claw Code Projekts. Du kannst alle 49 Tests ausführen, den Parity Audit interpretieren und häufige Fehler beheben. Dein KI-Agent-Harness ist bereit für den produktiven Einsatz!</div>
+</div>
+</div>
+
+<p style="text-align:center;margin-top:2rem;">
+<a href="../howto.html#s10" style="display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-weight:600;">Weiter zu Sektion 10 →</a>
+</p>
+</div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+<p>&copy; 2026 Belkis Aslani. Alle Rechte vorbehalten.</p>
+<p style="margin-top:.4rem"><a href="../impressum.html">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a> · <a href="../howto.html">Zurück zum How-To</a></p>
+</footer>
+
+</body>
+</html>

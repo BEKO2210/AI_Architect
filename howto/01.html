@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>01 — Arbeitsplatz einrichten — Claw Code How-To</title>
+<meta name="description" content="Detaillierte Anleitung zur Einrichtung der Entwicklungsumgebung für Claw Code: Python, Git und Repository-Setup für Windows, macOS und Linux.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--bg4:#e8e8e8;--fg:#111;--fg2:#666;--accent:#4f46e5;--accent2:#6366f1;--accent-glow:rgba(79,70,229,.08);--green-glow:rgba(34,197,94,.06);--orange-glow:rgba(245,158,11,.06);--red-glow:rgba(239,68,68,.06);--border:#e0e0e0;--border2:#d0d0d0}}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:1rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500}
+.nav-back:hover{color:var(--fg)}
+.nav-links{display:flex;gap:.75rem}
+.nav-link{font-size:.75rem;color:var(--fg2);font-weight:500;padding:.25rem .5rem;border:1px solid var(--border);border-radius:5px}
+.nav-link:hover{color:var(--fg);border-color:var(--fg2)}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:480px;margin:0 auto 1.5rem;line-height:1.6}
+.hero-stats{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.hs{text-align:center;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.hs strong{display:block;font-size:1.3rem;color:var(--accent2);letter-spacing:-.02em}
+.hs span{font-size:.6rem;color:var(--fg2);text-transform:uppercase;letter-spacing:.05em}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-num{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* OS TABS */
+.os-tabs{display:flex;gap:.25rem;margin:1rem 0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.25rem}
+.os-tab{flex:1;padding:.5rem .75rem;text-align:center;font-size:.75rem;font-weight:600;color:var(--fg2);background:transparent;border:none;border-radius:6px;cursor:pointer;transition:all .2s}
+.os-tab:hover{color:var(--fg)}
+.os-tab.active{background:var(--accent);color:#fff}
+.os-content{display:none}
+.os-content.active{display:block}
+
+/* TAGS */
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.tag{font-size:.6rem;padding:.2rem .5rem;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tag-beginner{background:var(--green-glow);color:var(--green)}
+.tag-core{background:var(--accent-glow);color:var(--accent2)}
+.tag-windows{background:var(--blue-glow);color:var(--blue)}
+.tag-macos{background:var(--orange-glow);color:var(--orange)}
+.tag-linux{background:var(--green-glow);color:var(--green-light)}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1rem;font-weight:700;color:var(--fg);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+.content h4{font-size:.9rem;font-weight:600;color:var(--fg);margin:1.25rem 0 .5rem}
+
+/* STEPS */
+.steps{margin:1.5rem 0}
+.step{display:grid;grid-template-columns:2rem 1fr;gap:1rem;margin-bottom:1.5rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.step-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+.step-title{font-weight:700;color:var(--fg);font-size:.9rem;margin-bottom:.4rem}
+.step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.step code{font-size:.8em}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .highlight{color:var(--accent2)}
+
+/* CHECKLIST */
+.checklist{margin:1rem 0;padding:0;list-style:none}
+.checklist li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.5rem}
+.checklist li::before{content:"☐";font-size:1.2rem;color:var(--fg2);line-height:1}
+.checklist li.checked::before{content:"☑";color:var(--green)}
+.checklist-text{flex:1;font-size:.85rem}
+.checklist-text strong{color:var(--fg)}
+
+/* ERROR GRID */
+.error-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin:1.5rem 0}
+.error-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;border-left:4px solid var(--red)}
+.error-card-title{font-weight:700;font-size:.85rem;color:var(--red);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.error-card-title::before{content:"⚠️";font-size:1rem}
+.error-card-solution{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.error-card-solution strong{color:var(--green);display:block;margin-bottom:.25rem}
+
+/* NEXT SECTION */
+.next-section{margin-top:3rem;padding:1.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);text-align:center}
+.next-section-title{font-size:1rem;font-weight:700;color:var(--fg);margin-bottom:.5rem}
+.next-section-desc{font-size:.85rem;color:var(--fg2);margin-bottom:1rem}
+.next-section-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;background:var(--accent);color:#fff;font-weight:600;font-size:.85rem;border-radius:var(--radius-sm);transition:all .2s}
+.next-section-btn:hover{background:var(--accent2);color:#fff;transform:translateY(-2px)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-num{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.step{grid-template-columns:2.5rem 1fr;gap:1.25rem}
+.step-num{width:2.5rem;height:2.5rem;font-size:1rem}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<div class="nav-links">
+<a href="../index.html" class="nav-link">← Buch</a>
+<a href="../howto.html" class="nav-link">How-To</a>
+</div>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Tutorial 01 von 10</div>
+<h1>01 — <em>Arbeitsplatz einrichten</em></h1>
+<p class="hero-sub">Detaillierte Schritt-für-Schritt Anleitung zur Einrichtung der Entwicklungsumgebung. Python 3.8+, Git und das Repository — komplett für Windows, macOS und Linux erklärt.</p>
+<div class="hero-stats">
+<div class="hs"><strong>3</strong><span>Betriebssysteme</span></div>
+<div class="hs"><strong>~20</strong><span>Minuten</span></div>
+<div class="hs"><strong>100%</strong><span>Kostenlos</span></div>
+</div>
+</header>
+
+<div class="container">
+
+<!-- VORAUSSETZUNGEN -->
+<section class="section" id="voraussetzungen">
+<div class="section-header">
+<div class="section-num">📋</div>
+<div class="section-title-wrap">
+<div class="section-label">Vorbereitung</div>
+<h2 class="section-title">Voraussetzungen</h2>
+<p class="section-desc">Was du brauchst, bevor du beginnst.</p>
+</div>
+</div>
+
+<div class="content">
+<ul class="checklist">
+<li><span class="checklist-text"><strong>Computer mit Internetverbindung</strong> — Zum Herunterladen von Python und Git</span></li>
+<li><span class="checklist-text"><strong>Admin-Rechte</strong> — Für die Installation von Software</span></li>
+<li><span class="checklist-text"><strong>~500 MB freier Speicherplatz</strong> — Für Python, Git und das Repository</span></li>
+<li><span class="checklist-text"><strong>Grundlegendes Terminal-Wissen</strong> — Befehle eingeben und ausführen können</span></li>
+</ul>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Keine Vorkenntnisse nötig</div>
+<div class="info-box-text">Diese Anleitung führt dich durch jeden Schritt. Selbst wenn du noch nie mit dem Terminal gearbeitet hast, schaffst du das!</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PYTHON INSTALLATION -->
+<section class="section" id="python">
+<div class="section-header">
+<div class="section-num">🐍</div>
+<div class="section-title-wrap">
+<div class="section-label">Schritt 1</div>
+<h2 class="section-title">Python Installation</h2>
+<p class="section-desc">Claw Code benötigt Python 3.8 oder höher. Wähle dein Betriebssystem für detaillierte Anweisungen.</p>
+<div class="tags">
+<span class="tag tag-beginner">Anfänger</span>
+<span class="tag tag-core">Essentiell</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Version prüfen</h3>
+<p>Öffne ein Terminal und führe folgenden Befehl aus, um zu prüfen, ob Python bereits installiert ist:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 --version</span><br>
+<span class="output">Python 3.10.12</span><br><br>
+<span class="comment"># Alternativ auf Windows:</span><br>
+<span class="prompt">$</span> <span class="cmd">python --version</span><br>
+<span class="output">Python 3.11.4</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Bereits installiert?</div>
+<div class="info-box-text">Wenn du <strong>Python 3.8 oder höher</strong> siehst, kannst du direkt zu Schritt 2 springen. Andernfalls folge den Anweisungen unten.</div>
+</div>
+</div>
+
+<h3>Installation nach Betriebssystem</h3>
+
+<div class="os-tabs">
+<button class="os-tab active" onclick="showOs('windows')">🪟 Windows</button>
+<button class="os-tab" onclick="showOs('macos')">🍎 macOS</button>
+<button class="os-tab" onclick="showOs('linux')">🐧 Linux</button>
+</div>
+
+<div id="windows" class="os-content active">
+<h4>Python unter Windows installieren</h4>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Installer herunterladen</div>
+<div class="step-desc">Besuche <a href="https://python.org/downloads" target="_blank">python.org/downloads</a> und lade die neueste Python-Version herunter (mindestens 3.8).</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Installer ausführen</div>
+<div class="step-desc">Wichtig: Aktiviere das Häkchen <strong>"Add Python to PATH"</strong> am Anfang der Installation!</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Installation verifizieren</div>
+<div class="step-desc">Öffne PowerShell oder CMD und führe aus:<br><code>python --version</code></div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="macos" class="os-content">
+<h4>Python unter macOS installieren</h4>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Mit Homebrew (empfohlen)</div>
+<div class="step-desc">Wenn du <a href="https://brew.sh" target="_blank">Homebrew</a> installiert hast:<br><code>brew install python3</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Ohne Homebrew</div>
+<div class="step-desc">Lade den Installer von <a href="https://python.org/downloads" target="_blank">python.org/downloads</a> herunter und führe ihn aus.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Installation verifizieren</div>
+<div class="step-desc">Öffne das Terminal und führe aus:<br><code>python3 --version</code></div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="linux" class="os-content">
+<h4>Python unter Linux installieren</h4>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Ubuntu/Debian</div>
+<div class="step-desc"><code>sudo apt update && sudo apt install python3 python3-pip</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Fedora/RHEL</div>
+<div class="step-desc"><code>sudo dnf install python3 python3-pip</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Arch Linux</div>
+<div class="step-desc"><code>sudo pacman -S python python-pip</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<div class="step-title">Installation verifizieren</div>
+<div class="step-desc"><code>python3 --version</code></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Gute Nachricht</div>
+<div class="info-box-text">Claw Code benötigt keine externen Abhängigkeiten — alles läuft mit der Python-Standardbibliothek.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- GIT INSTALLATION -->
+<section class="section" id="git">
+<div class="section-header">
+<div class="section-num">🌿</div>
+<div class="section-title-wrap">
+<div class="section-label">Schritt 2</div>
+<h2 class="section-title">Git Installation</h2>
+<p class="section-desc">Git ist ein Versionskontrollsystem, das wir verwenden, um das Claw-Code-Repository herunterzuladen.</p>
+<div class="tags">
+<span class="tag tag-beginner">Anfänger</span>
+<span class="tag tag-core">Essentiell</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Prüfe, ob Git bereits installiert ist</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">git --version</span><br>
+<span class="output">git version 2.34.1</span>
+</div>
+</div>
+
+<p>Wenn du eine Versionsnummer siehst, ist Git bereits installiert und du kannst zu Schritt 3 springen.</p>
+
+<h3>Git installieren</h3>
+
+<div class="os-tabs">
+<button class="os-tab active" onclick="showOs2('windows-git')">🪟 Windows</button>
+<button class="os-tab" onclick="showOs2('macos-git')">🍎 macOS</button>
+<button class="os-tab" onclick="showOs2('linux-git')">🐧 Linux</button>
+</div>
+
+<div id="windows-git" class="os-content active">
+<h4>Git unter Windows</h4>
+<p>1. Lade den Installer herunter: <a href="https://git-scm.com/download/win" target="_blank">git-scm.com/download/win</a></p>
+<p>2. Führe den Installer aus und behalte die Standard-Einstellungen bei</p>
+<p>3. Wähle bei "Adjusting your PATH environment" die Option <strong>"Git from the command line and also from 3rd-party software"</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Nach der Installation, öffne PowerShell oder CMD:</span><br>
+<span class="prompt">$</span> <span class="cmd">git --version</span>
+</div>
+</div>
+</div>
+
+<div id="macos-git" class="os-content">
+<h4>Git unter macOS</h4>
+<p><strong>Mit Homebrew (empfohlen):</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">brew install git</span>
+</div>
+</div>
+<p><strong>Ohne Homebrew:</strong></p>
+<p>Installiere Xcode Command Line Tools:</p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">xcode-select --install</span>
+</div>
+</div>
+</div>
+
+<div id="linux-git" class="os-content">
+<h4>Git unter Linux</h4>
+<p><strong>Ubuntu/Debian:</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">sudo apt install git</span>
+</div>
+</div>
+<p><strong>Fedora/RHEL:</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">sudo dnf install git</span>
+</div>
+</div>
+<p><strong>Arch Linux:</strong></p>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">sudo pacman -S git</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- REPOSITORY KLONEN -->
+<section class="section" id="klonen">
+<div class="section-header">
+<div class="section-num">📦</div>
+<div class="section-title-wrap">
+<div class="section-label">Schritt 3</div>
+<h2 class="section-title">Repository klonen</h2>
+<p class="section-desc">Lade das Claw-Code-Repository auf deinen Computer herunter.</p>
+<div class="tags">
+<span class="tag tag-beginner">Anfänger</span>
+<span class="tag tag-core">Essentiell</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Schritt-für-Schritt Anleitung</h3>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Zu einem Zielordner navigieren</div>
+<div class="step-desc">Wähle einen Ordner, in dem du das Projekt speichern möchtest (z.B. Dokumente oder Home-Verzeichnis):</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Windows (PowerShell):</span><br>
+<span class="prompt">$</span> <span class="cmd">cd ~\Documents</span><br><br>
+<span class="comment"># macOS/Linux:</span><br>
+<span class="prompt">$</span> <span class="cmd">cd ~/Documents</span><br><br>
+<span class="comment"># Oder einen anderen beliebigen Ordner:</span><br>
+<span class="prompt">$</span> <span class="cmd">cd ~/Projekte</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Repository klonen</div>
+<div class="step-desc">Führe den folgenden Git-Befehl aus:</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">git clone https://github.com/instructkr/claw-code.git</span><br><br>
+<span class="output">Cloning into 'claw-code'...<br>
+remote: Enumerating objects: 1250, done.<br>
+remote: Total 1250 (delta 0), reused 0 (delta 0)<br>
+Receiving objects: 100% (1250/1250), 2.5 MiB | 5.2 MiB/s, done.<br>
+Resolving deltas: 100% (850/850), done.</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">In das Projektverzeichnis wechseln</div>
+<div class="step-desc"><code>cd claw-code</code></div>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<div class="step-title">Ordnerstruktur anzeigen</div>
+<div class="step-desc">Überprüfe, ob alle Dateien korrekt heruntergeladen wurden:</div>
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Windows (PowerShell):</span><br>
+<span class="prompt">$</span> <span class="cmd">dir</span><br><br>
+<span class="comment"># macOS/Linux:</span><br>
+<span class="prompt">$</span> <span class="cmd">ls -la</span><br><br>
+<span class="output">drwxr-xr-x  8 user user 4096 Apr  3 10:00 .<br>
+drwxr-xr-x  5 user user 4096 Apr  3 09:59 ..<br>
+drwxr-xr-x  2 user user 4096 Apr  3 10:00 assets<br>
+drwxr-xr-x  2 user user 4096 Apr  3 10:00 src<br>
+drwxr-xr-x  2 user user 4096 Apr  3 10:00 tests<br>
+-rw-r--r--  1 user user  220 Apr  3 10:00 README.md<br>
+-rw-r--r--  1 user user  4500 Apr  3 10:00 ANLEITUNG.md</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Repository erfolgreich geklont!</div>
+<div class="info-box-text">Du solltest nun die Ordner <code>src/</code>, <code>tests/</code>, <code>assets/</code> und die Dateien <code>README.md</code> sowie <code>ANLEITUNG.md</code> sehen.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ERSTE VERIFIZIERUNG -->
+<section class="section" id="verifizierung">
+<div class="section-header">
+<div class="section-num">✓</div>
+<div class="section-title-wrap">
+<div class="section-label">Schritt 4</div>
+<h2 class="section-title">Erste Verifizierung</h2>
+<p class="section-desc">Stelle sicher, dass alles korrekt funktioniert, indem du die ersten Befehle ausführst.</p>
+<div class="tags">
+<span class="tag tag-core">Wichtig</span>
+<span class="tag tag-beginner">Anfänger</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Teste die Installation</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Stelle sicher, dass du im Projekt-Ordner bist:</span><br>
+<span class="prompt">$</span> <span class="cmd">pwd</span><br>
+<span class="output">/home/user/Documents/claw-code</span><br><br>
+<span class="comment"># Führe den ersten Befehl aus:</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main summary</span><br><br>
+<span class="output"># Claw Code — Portierungsübersicht<br><br>
+## Python-Arbeitsbereich<br>
+- Dateien: 25 Python-Dateien<br>
+- Subsysteme: 30+ Module<br>
+- Befehle: ~150 gespiegelt<br>
+- Tools: ~100 gespiegelt</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">🎉</div>
+<div class="info-box-content">
+<div class="info-box-title">Alles funktioniert!</div>
+<div class="info-box-text">Wenn du die Zusammenfassung siehst, ist deine Entwicklungsumgebung vollständig eingerichtet. Du bist bereit für Tutorial 02!</div>
+</div>
+</div>
+
+<h3>Weitere nützliche Befehle zum Testen</h3>
+
+<div class="terminal">
+<div class="terminal-body">
+<span class="comment"># Liste alle verfügbaren Befehle auf:</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main commands --limit 5</span><br><br>
+<span class="comment"># Zeige die Projektstruktur:</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main manifest</span><br><br>
+<span class="comment"># Liste die Subsysteme auf:</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main subsystems --limit 5</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- HÄUFIGE FEHLER -->
+<section class="section" id="fehler">
+<div class="section-header">
+<div class="section-num">⚠️</div>
+<div class="section-title-wrap">
+<div class="section-label">Problemlösung</div>
+<h2 class="section-title">Häufige Fehler</h2>
+<p class="section-desc">Typische Probleme bei der Einrichtung und ihre Lösungen.</p>
+<div class="tags">
+<span class="tag tag-core">Hilfreich</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<div class="error-grid">
+<div class="error-card">
+<div class="error-card-title">"python3: command not found"</div>
+<div class="error-card-solution">
+<strong>Lösung:</strong><br>
+Auf Windows verwende <code>python</code> statt <code>python3</code>.<br><br>
+Oder füge Python zum PATH hinzu:
+<code>set PATH=%PATH%;C:\Python311</code>
+</div>
+</div>
+
+<div class="error-card">
+<div class="error-card-title">"git: command not found"</div>
+<div class="error-card-solution">
+<strong>Lösung:</strong><br>
+Git ist nicht im PATH. Starte das Terminal neu oder füge es manuell hinzu.<br><br>
+Unter Windows: <code>C:\Program Files\Git\bin</code> zum PATH hinzufügen.
+</div>
+</div>
+
+<div class="error-card">
+<div class="error-card-title">"Permission denied"</div>
+<div class="error-card-solution">
+<strong>Lösung:</strong><br>
+Führe das Terminal als Administrator aus (Windows) oder verwende <code>sudo</code> (macOS/Linux).<br><br>
+Bei Git-Clone-Fehlern: Überprüfe deine Internetverbindung.
+</div>
+</div>
+
+<div class="error-card">
+<div class="error-card-title">"ModuleNotFoundError: No module named 'src'"</div>
+<div class="error-card-solution">
+<strong>Lösung:</strong><br>
+Du bist nicht im Projekt-Root-Verzeichnis. Wechsle mit <code>cd</code> in den claw-code Ordner.<br><br>
+Prüfe mit <code>pwd</code> oder <code>dir</code>, wo du bist.
+</div>
+</div>
+
+<div class="error-card">
+<div class="error-card-title">Python Version zu alt</div>
+<div class="error-card-solution">
+<strong>Lösung:</strong><br>
+Claw Code benötigt Python 3.8+. Aktualisiere deine Python-Installation.<br><br>
+Prüfe mit: <code>python3 --version</code>
+</div>
+</div>
+
+<div class="error-card">
+<div class="error-card-title">SSL-Zertifikat-Fehler</div>
+<div class="error-card-solution">
+<strong>Lösung:</strong><br>
+Bei Git-Klon-Fehlern: <code>git config --global http.sslVerify false</code><br><br>
+Oder aktualisiere deine SSL-Zertifikate.
+</div>
+</div>
+</div>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Nach der Installation</div>
+<div class="info-box-text">Wenn du Python oder Git frisch installiert hast, <strong>starte dein Terminal neu</strong>, damit die Änderungen wirksam werden.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ZUSAMMENFASSUNG -->
+<section class="section" id="zusammenfassung">
+<div class="section-header">
+<div class="section-num">📝</div>
+<div class="section-title-wrap">
+<div class="section-label">Checkliste</div>
+<h2 class="section-title">Zusammenfassung</h2>
+<p class="section-desc">Hast du alles erledigt?</p>
+</div>
+</div>
+
+<div class="content">
+<ul class="checklist">
+<li class="checked"><span class="checklist-text"><strong>Python 3.8+ installiert</strong> — Getestet mit <code>python3 --version</code></span></li>
+<li class="checked"><span class="checklist-text"><strong>Git installiert</strong> — Getestet mit <code>git --version</code></span></li>
+<li class="checked"><span class="checklist-text"><strong>Repository geklont</strong> — <code>git clone https://github.com/instructkr/claw-code.git</code></span></li>
+<li class="checked"><span class="checklist-text"><strong>Erster Befehl funktioniert</strong> — <code>python3 -m src.main summary</code> zeigt Ergebnisse</span></li>
+</ul>
+
+<div class="info-box success">
+<div class="info-box-icon">🎉</div>
+<div class="info-box-content">
+<div class="info-box-title">Sektion 1 abgeschlossen!</div>
+<div class="info-box-text">Dein Arbeitsplatz ist eingerichtet. Du hast Python, Git und das Claw-Code-Repository erfolgreich installiert. Weiter geht's mit Tutorial 02: Repository klonen & erste Befehle!</div>
+</div>
+</div>
+
+<div class="next-section">
+<div class="next-section-title">Bereit für das nächste Tutorial?</div>
+<div class="next-section-desc">Lerne die Projektstruktur kennen und führe die ersten drei essenziellen Befehle aus.</div>
+<a href="../howto.html#s2" class="next-section-btn">Zu Tutorial 02 →</a>
+</div>
+</div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+<p>&copy; 2026 Belkis Aslani. Alle Rechte vorbehalten.</p>
+<p style="margin-top:.4rem"><a href="../impressum.html">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a> · <a href="../howto.html">Zurück zum How-To</a></p>
+</footer>
+
+<script>
+function showOs(os) {
+  document.querySelectorAll('#windows, #macos, #linux').forEach(el => el.classList.remove('active'));
+  document.getElementById(os).classList.add('active');
+  document.querySelectorAll('.os-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', i === (os === 'windows' ? 0 : os === 'macos' ? 1 : 2));
+  });
+}
+
+function showOs2(os) {
+  document.querySelectorAll('#windows-git, #macos-git, #linux-git').forEach(el => el.classList.remove('active'));
+  document.getElementById(os).classList.add('active');
+  var tabs = document.querySelectorAll('#git .os-tab');
+  tabs.forEach((tab, i) => {
+    tab.classList.toggle('active', i === (os === 'windows-git' ? 0 : os === 'macos-git' ? 1 : 2));
+  });
+}
+</script>
+
+</body>
+</html>

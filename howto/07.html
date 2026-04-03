@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>07 — Turn-Loops &amp; Budget-System — Claw Code How-To</title>
+<meta name="description" content="Lerne wie Turn-Loops im Claw Code funktionieren, wie das Token-Budget-System arbeitet und wie du Stop-Conditions kontrollierst.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--bg4:#e8e8e8;--fg:#111;--fg2:#666;--accent:#4f46e5;--accent2:#6366f1;--accent-glow:rgba(79,70,229,.08);--green-glow:rgba(34,197,94,.06);--orange-glow:rgba(245,158,11,.06);--red-glow:rgba(239,68,68,.06);--border:#e0e0e0;--border2:#d0d0d0}}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.5rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500;padding:.25rem .5rem;border:1px solid var(--border);border-radius:5px;transition:all .2s}
+.nav-back:hover{color:var(--fg);border-color:var(--accent);background:var(--accent-glow)}
+.nav-howto{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700}
+.nav-howto:hover{background:var(--accent2);color:#fff}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent2);background:var(--accent-glow);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:480px;margin:0 auto 1.5rem;line-height:1.6}
+.hero-stats{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+.hs{text-align:center;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.hs strong{display:block;font-size:1.3rem;color:var(--accent2);letter-spacing:-.02em}
+.hs span{font-size:.6rem;color:var(--fg2);text-transform:uppercase;letter-spacing:.05em}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-num{width:48px;height:48px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* TAGS */
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.tag{font-size:.6rem;padding:.2rem .5rem;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tag-beginner{background:var(--green-glow);color:var(--green)}
+.tag-core{background:var(--accent-glow);color:var(--accent2)}
+.tag-advanced{background:var(--orange-glow);color:var(--orange)}
+.tag-time{background:var(--blue-glow);color:var(--blue)}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1rem;font-weight:700;color:var(--fg);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+.content h4{font-size:.9rem;font-weight:700;color:var(--fg);margin:1.25rem 0 .5rem}
+
+/* STEPS */
+.steps{margin:1.5rem 0}
+.step{display:grid;grid-template-columns:2rem 1fr;gap:1rem;margin-bottom:1.5rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.step-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+.step-title{font-weight:700;color:var(--fg);font-size:.9rem;margin-bottom:.4rem}
+.step-desc{font-size:.85rem;color:var(--fg2);line-height:1.6}
+.step code{font-size:.8em}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .highlight{color:var(--accent2)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+
+/* CODE BLOCK */
+.code-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6;overflow-x:auto}
+.code-block .keyword{color:var(--accent2)}
+.code-block .string{color:var(--green-light)}
+.code-block .comment{color:#666;font-style:italic}
+.code-block .function{color:var(--orange)}
+
+/* DIAGRAM */
+.diagram{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin:1rem 0;text-align:center}
+.diagram-arrow{font-size:1.5rem;color:var(--accent);margin:.5rem 0}
+.diagram-box{display:inline-block;padding:.5rem 1rem;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--fg)}
+.diagram-flow{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap}
+.diagram-step{padding:.75rem 1rem;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:.75rem;color:var(--fg);text-align:center}
+.diagram-step.highlight{background:var(--accent-glow);border-color:var(--accent)}
+.diagram-arrow-h{font-size:1rem;color:var(--accent)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* NAVIGATION LINKS */
+.nav-links{display:flex;justify-content:space-between;gap:1rem;margin:2rem 0;padding:1rem 0;border-top:1px solid var(--border)}
+.nav-link{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;color:var(--fg);transition:all .2s}
+.nav-link:hover{border-color:var(--accent);background:var(--accent-glow);color:var(--fg)}
+.nav-link.prev::before{content:"\2190";margin-right:.25rem}
+.nav-link.next::after{content:"\2192";margin-left:.25rem}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-num{width:56px;height:56px;font-size:1.6rem}
+.section-title{font-size:1.5rem}
+.step{grid-template-columns:2.5rem 1fr;gap:1.25rem}
+.step-num{width:2.5rem;height:2.5rem;font-size:1rem}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<a href="../howto.html" class="nav-back">&larr; Zum Guide</a>
+<a href="../howto.html#s7" class="nav-howto" title="Uebersicht">07</a>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Teil II - Kern-Features</div>
+<h1>07 - <em>Turn-Loops</em> &amp; Budget-System</h1>
+<p class="hero-sub">Multi-Turn-Schleifen ausfuehren, Token-Budgets verstehen und Stop-Conditions kontrollieren. Lerne wie Claw Code komplexe Aufgaben iterativ bearbeitet.</p>
+<div class="hero-stats">
+<div class="hs"><strong>3</strong><span>Kernkonzepte</span></div>
+<div class="hs"><strong>5</strong><span>Befehle</span></div>
+<div class="hs"><strong>unendlich</strong><span>Anwendungen</span></div>
+</div>
+</header>
+
+<div class="container">
+
+<!-- SEKTION: Was sind Turn-Loops? -->
+<section class="section" id="was-sind-turn-loops">
+<div class="section-header">
+<div class="section-num">01</div>
+<div class="section-title-wrap">
+<div class="section-label">Grundlagen</div>
+<h2 class="section-title">Was sind Turn-Loops?</h2>
+<p class="section-desc">Der Unterschied zwischen einem einzelnen Turn und einer Multi-Turn-Schleife - das Herzstueck agentenartiger Verarbeitung.</p>
+<div class="tags">
+<span class="tag tag-core">Kernkonzept</span>
+<span class="tag tag-time">10 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Definition: Turn vs. Turn-Loop</h3>
+<p>Ein <strong>Turn</strong> (Durchgang) ist ein einzelner Verarbeitungszyklus im Claw Code System. Ein <strong>Turn-Loop</strong> fuehrt mehrere Turns nacheinander aus, wobei jeder Turn auf dem Ergebnis des vorherigen aufbaut.</p>
+
+<div class="diagram">
+<div class="diagram-flow">
+<div class="diagram-step highlight">Prompt</div>
+<span class="diagram-arrow-h">&rarr;</span>
+<div class="diagram-step">Routing</div>
+<span class="diagram-arrow-h">&rarr;</span>
+<div class="diagram-step">Ausfuehrung</div>
+<span class="diagram-arrow-h">&rarr;</span>
+<div class="diagram-step">Antwort</div>
+</div>
+<div style="margin-top:1rem;font-size:.75rem;color:var(--fg2)">Ein einzelner Turn</div>
+</div>
+
+<h3>Die Iterations-Logik</h3>
+<p>Turn-Loops ermoeglichen es dem System, komplexe Aufgaben Schritt fuer Schritt zu bearbeiten:</p>
+<ul>
+<li><strong>Turn 1</strong> - Initialer Prompt, erstes Routing, Basisanalyse</li>
+<li><strong>Turn 2</strong> - Aufbauend auf Turn 1, vertiefte Analyse</li>
+<li><strong>Turn 3</strong> - Verfeinerung der Ergebnisse, Korrekturen</li>
+<li><strong>Turn n</strong> - Finale Zusammenfassung oder bis Stop-Condition erreicht</li>
+</ul>
+
+<div class="info-box tip">
+<div class="info-box-icon">&#128161;</div>
+<div class="info-box-content">
+<div class="info-box-title">Vorteil von Turn-Loops</div>
+<div class="info-box-text">Anstatt alles auf einmal zu versuchen, bricht der Agent komplexe Aufgaben in ueberschaubare Schritte auf. Jeder Turn kann sich auf einen Aspekt konzentrieren und das Gesamtergebnis iterativ verbessern.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SEKTION: Turn-Loop ausfuehren -->
+<section class="section" id="turn-loop-ausfuehren">
+<div class="section-header">
+<div class="section-num">02</div>
+<div class="section-title-wrap">
+<div class="section-label">Praxis</div>
+<h2 class="section-title">Turn-Loop ausfuehren</h2>
+<p class="section-desc">Den turn-loop Befehl verwenden und seine Ausgabe interpretieren.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Der turn-loop Befehl</h3>
+<p>Der <code>turn-loop</code> Befehl startet eine Multi-Turn-Verarbeitung mit automatischer Iteration.</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Standard: bis zu 5 Turns</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Analysiere die Codebasis"</span><br><br>
+<span class="output">Turn-Loop gestartet...<br>Turn 1/5: Initialanalyse<br>&nbsp;&nbsp;Commands: [analyze, grep, ls]<br>&nbsp;&nbsp;Tools: [Read, Glob]<br>Turn 2/5: Vertiefung<br>&nbsp;&nbsp;Commands: [refactor, diff]<br>&nbsp;&nbsp;Tools: [Read, Write]<br>...<br>Turn-Loop abgeschlossen nach 5 Turns</span>
+</div>
+</div>
+
+<h3>Was passiert intern?</h3>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Session-Initialisierung</div>
+<div class="step-desc">Ein <code>QueryEnginePort</code> wird erstellt und mit dem Workspace-Kontext initialisiert.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Prompt-Routing</div>
+<div class="step-desc">Der Prompt wird tokenisiert und die besten Befehle/Tools werden ueber <code>route_prompt()</code> ermittelt.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Ausfuehrung simulieren</div>
+<div class="step-desc">Die gematchten Befehle/Tools werden simuliert (keine echte Ausfuehrung im Port).</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<div class="step-title">Ergebnis als Kontext</div>
+<div class="step-desc">Das Ergebnis wird dem naechsten Turn als zusaetzlicher Kontext hinzugefuegt.</div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">5</div>
+<div class="step-content">
+<div class="step-title">Iteration oder Abbruch</div>
+<div class="step-desc">Pruefung der Stop-Conditions: Budget ueberschritten? Max-Turns erreicht? Ziel erfuellt?</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SEKTION: Optionen -->
+<section class="section" id="optionen">
+<div class="section-header">
+<div class="section-num">03</div>
+<div class="section-title-wrap">
+<div class="section-label">Konfiguration</div>
+<h2 class="section-title">Optionen &amp; Flags</h2>
+<p class="section-desc">Steuere das Verhalten des Turn-Loops mit Kommandozeilen-Optionen.</p>
+<div class="tags">
+<span class="tag tag-advanced">Fortgeschritten</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>--max-turns: Anzahl der Turns begrenzen</h3>
+<p>Mit <code>--max-turns</code> (oder <code>-m</code>) kannst du festlegen, wie viele Iterationen maximal ausgefuehrt werden.</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Nur 3 Turns ausfuehren</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Refaktoriere den Code" --max-turns 3</span><br><br>
+<span class="comment"># Kurzform</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Analysiere" -m 2</span><br><br>
+<span class="comment"># Unbegrenzte Turns (Vorsicht!)</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Komplexe Aufgabe" --max-turns 0</span>
+</div>
+</div>
+
+<div class="table-wrap">
+<table>
+<tr><th>Wert</th><th>Verhalten</th></tr>
+<tr><td><code>--max-turns 1-100</code></td><td>Fuehrt genau N Turns aus oder bricht frueher bei Stop-Condition ab</td></tr>
+<tr><td><code>--max-turns 0</code></td><td>Kein Limit (nur durch Budget oder andere Stop-Conditions begrenzt)</td></tr>
+<tr><td>nicht gesetzt</td><td>Standardwert ist 5 Turns</td></tr>
+</table>
+</div>
+
+<h3>--structured-output: JSON-Ausgabe</h3>
+<p>Fuer die Weiterverarbeitung in Skripten oder CI/CD-Pipelines kannst du die Ausgabe als JSON formatieren.</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># JSON-Ausgabe fuer Weiterverarbeitung</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Analysiere" --structured-output</span><br><br>
+<span class="output">{<br>&nbsp;&nbsp;"turns": 5,<br>&nbsp;&nbsp;"session_id": "sess_abc123",<br>&nbsp;&nbsp;"commands_used": ["analyze", "grep", "refactor"],<br>&nbsp;&nbsp;"tools_used": ["Read", "Glob", "Write"],<br>&nbsp;&nbsp;"completed": true,<br>&nbsp;&nbsp;"stop_reason": "max_turns_reached"<br>}</span>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">&#128161;</div>
+<div class="info-box-content">
+<div class="info-box-title">Pro-Tipp</div>
+<div class="info-box-text">Kombiniere <code>--structured-output</code> mit <code>jq</code> fuer maechtige Pipeline-Operationen:<br><code>python3 -m src.main turn-loop "Task" --structured-output | jq '.commands_used'</code></div>
+</div>
+</div>
+
+<h3>Alle Optionen im Ueberblick</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop --help</span><br><br>
+<span class="output">Usage: turn-loop [PROMPT] [OPTIONS]<br><br>Options:<br>&nbsp;&nbsp;--max-turns, -m INTEGER&nbsp;&nbsp;Maximum number of turns (default: 5)<br>&nbsp;&nbsp;--structured-output&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Output as JSON<br>&nbsp;&nbsp;--session-id TEXT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Resume existing session<br>&nbsp;&nbsp;--compact-threshold INT&nbsp;&nbsp;Token threshold for compaction</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SEKTION: Token-Budget -->
+<section class="section" id="token-budget">
+<div class="section-header">
+<div class="section-num">04</div>
+<div class="section-title-wrap">
+<div class="section-label">Architektur</div>
+<h2 class="section-title">Token-Budget erklaert</h2>
+<p class="section-desc">Wie das System Token-Verbrauch ueber Turns hinweg verfolgt und verwaltet.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-time">10 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Die drei Budget-Kategorien</h3>
+<p>Das Budget-System verfolgt den Token-Verbrauch in drei Kategorien:</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>Kategorie</th><th>Beschreibung</th><th>Beispiel</th></tr>
+<tr><td><strong>Input-Tokens</strong></td><td>Tokens im Prompt + Kontext</td><td>"Analysiere die Datei main.py"</td></tr>
+<tr><td><strong>Output-Tokens</strong></td><td>Tokens in der generierten Antwort</td><td>Befehlsvorschlaege, Erklaerungen</td></tr>
+<tr><td><strong>Total-Budget</strong></td><td>Maximale Tokens pro Session</td><td>Standard: 100.000 Tokens</td></tr>
+</table>
+</div>
+
+<h3>Budget-Tracking im Code</h3>
+<p>Die Budget-Verwaltung erfolgt in der <code>QueryEnginePort</code> Klasse:</p>
+
+<div class="code-block">
+<span class="comment"># Vereinfachte Darstellung aus runtime.py</span><br>
+<span class="keyword">class</span> <span class="function">TurnBudget</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span> <span class="function">__init__</span>(self, max_tokens=<span class="string">100_000</span>):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.max_tokens = max_tokens<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.used_input = <span class="string">0</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.used_output = <span class="string">0</span><br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span> <span class="function">track_turn</span>(self, input_tokens, output_tokens):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.used_input += input_tokens<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.used_output += output_tokens<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span> <span class="function">remaining</span>(self):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> self.max_tokens - (self.used_input + self.used_output)
+</div>
+
+<h3>Kompaktierung bei Budget-Knappheit</h3>
+<p>Wenn das Budget knapp wird, wird automatisch kompaktisiert:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="output">Turn 3/10: Budget bei 80%<br>&nbsp;&nbsp;- Kompaktierung gestartet<br>&nbsp;&nbsp;- Alte Turns werden zusammengefasst<br>&nbsp;&nbsp;- Kontext reduziert, Kerninformationen erhalten<br>Turn 4/10: Weiter mit kompaktem Kontext</span>
+</div>
+</div>
+
+<div class="info-box warning">
+<div class="info-box-icon">&#9888;</div>
+<div class="info-box-content">
+<div class="info-box-title">Hinweis zur Simulation</div>
+<div class="info-box-text">Das Budget-System im Claw Code ist eine Simulation. Es zeigt, wie das originale System Ressourcen verwaltet haette, ohne echte API-Kosten zu verursachen. Die Token-Zahlen sind Schaetzungen basierend auf Wort-Charakter-Verhaeltnissen.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SEKTION: Stop-Conditions -->
+<section class="section" id="stop-conditions">
+<div class="section-header">
+<div class="section-num">05</div>
+<div class="section-title-wrap">
+<div class="section-label">Kontrolle</div>
+<h2 class="section-title">Stop-Conditions</h2>
+<p class="section-desc">Wann und warum ein Turn-Loop automatisch stoppt - und wie du das steuerst.</p>
+<div class="tags">
+<span class="tag tag-advanced">Fortgeschritten</span>
+<span class="tag tag-time">5 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Die vier Stop-Conditions</h3>
+
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<div class="step-title">Max-Turns erreicht</div>
+<div class="step-desc">Die angegebene maximale Anzahl an Turns wurde ausgefuehrt. Stop-Reason: <code>max_turns_reached</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<div class="step-title">Budget erschoepft</div>
+<div class="step-desc">Das Token-Budget wurde ueberschritten oder ist zu knapp fuer weitere Turns. Stop-Reason: <code>budget_exhausted</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<div class="step-title">Ziel erreicht (simuliert)</div>
+<div class="step-desc">Das System erkennt, dass die Aufgabe vollstaendig erledigt ist. Stop-Reason: <code>goal_achieved</code></div>
+</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<div class="step-title">Fehler oder Abbruch</div>
+<div class="step-desc">Ein kritischer Fehler ist aufgetreten oder der Benutzer hat abgebrochen. Stop-Reason: <code>error</code> oder <code>user_cancelled</code></div>
+</div>
+</div>
+</div>
+
+<h3>Stop-Reason in der Ausgabe</h3>
+<p>Die <code>stop_reason</code> zeigt dir, warum der Loop beendet wurde:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Test" --max-turns 3 --structured-output | jq '.stop_reason'</span><br>
+<span class="output">"max_turns_reached"</span><br><br>
+<span class="comment"># Budget-Ueberschreitung simulieren</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Sehr langer Prompt..." --max-turns 100</span><br>
+<span class="output">Turn 8: Budget bei 95%<br>Turn 9: Budget ueberschritten!<br>Turn-Loop gestoppt. Grund: budget_exhausted</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">&#9989;</div>
+<div class="info-box-content">
+<div class="info-box-title">Best Practice</div>
+<div class="info-box-text">Starte mit niedrigen <code>--max-turns</code> Werten (3-5) fuer neue Aufgaben. Steigere erst, wenn du siehst, dass das System mehr Iterationen braucht, um gute Ergebnisse zu liefern.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SEKTION: Praktisches Beispiel -->
+<section class="section" id="beispiel">
+<div class="section-header">
+<div class="section-num">06</div>
+<div class="section-title-wrap">
+<div class="section-label">Anwendung</div>
+<h2 class="section-title">Praktisches Beispiel</h2>
+<p class="section-desc">Eine komplette Analyse-Session mit Turn-Loop von Anfang bis Ende.</p>
+<div class="tags">
+<span class="tag tag-core">Kern</span>
+<span class="tag tag-time">10 Min</span>
+</div>
+</div>
+</div>
+
+<div class="content">
+<h3>Szenario: Code-Refactoring</h3>
+<p>Du moechtest eine Python-Datei analysieren und verbessern. Das ist eine Aufgabe, die sich perfekt fuer einen Turn-Loop eignet.</p>
+
+<h4>Schritt 1: Initialen Turn-Loop starten</h4>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main turn-loop "Analysiere src/main.py und schlage Verbesserungen vor" --max-turns 4</span><br><br>
+<span class="output">=== Turn-Loop gestartet ===<br><br>Turn 1/4: Initialanalyse<br>&nbsp;&nbsp;Prompt: "Analysiere src/main.py..."<br>&nbsp;&nbsp;Routing:<br>&nbsp;&nbsp;&nbsp;&nbsp;Command: analyze (Score: 0.92)<br>&nbsp;&nbsp;&nbsp;&nbsp;Command: show-command (Score: 0.74)<br>&nbsp;&nbsp;&nbsp;&nbsp;Tool: Read (Score: 0.88)<br>&nbsp;&nbsp;Status: Datei analysiert, 3 Verbesserungsbereiche identifiziert</span>
+</div>
+</div>
+
+<h4>Schritt 2: Zwischenergebnisse betrachten</h4>
+<div class="terminal">
+<div class="terminal-body">
+<span class="output">Turn 2/4: Vertiefung der Analyse<br>&nbsp;&nbsp;Kontext: 3 Verbesserungsbereiche aus Turn 1<br>&nbsp;&nbsp;Routing:<br>&nbsp;&nbsp;&nbsp;&nbsp;Command: grep (Score: 0.81)<br>&nbsp;&nbsp;&nbsp;&nbsp;Tool: Read (Score: 0.79)<br>&nbsp;&nbsp;Status: Code-Muster untersucht, Redundanzen gefunden<br><br>Turn 3/4: Refactoring-Vorschlaege<br>&nbsp;&nbsp;Kontext: Redundanzen aus Turn 2<br>&nbsp;&nbsp;Routing:<br>&nbsp;&nbsp;&nbsp;&nbsp;Command: refactor (Score: 0.95)<br>&nbsp;&nbsp;&nbsp;&nbsp;Command: diff (Score: 0.67)<br>&nbsp;&nbsp;Status: 5 konkrete Refactoring-Schritte erarbeitet</span>
+</div>
+</div>
+
+<h4>Schritt 3: Finale Zusammenfassung</h4>
+<div class="terminal">
+<div class="terminal-body">
+<span class="output">Turn 4/4: Dokumentation<br>&nbsp;&nbsp;Kontext: 5 Refactoring-Schritte aus Turn 3<br>&nbsp;&nbsp;Routing:<br>&nbsp;&nbsp;&nbsp;&nbsp;Command: summary (Score: 0.89)<br>&nbsp;&nbsp;Status: Finale Zusammenfassung erstellt<br><br>=== Turn-Loop abgeschlossen ===<br>Stop-Reason: max_turns_reached<br>Budget used: 12,450 / 100,000 tokens (12%)<br>Session-ID: sess_refactor_2024</span>
+</div>
+</div>
+
+<h3>Session speichern und fortsetzen</h3>
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Session speichern</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main flush-transcript "Refactoring-Analyse main.py"</span><br>
+<span class="output">Session gespeichert: sess_refactor_2024</span><br><br>
+<span class="comment"># Später fortsetzen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main load-session sess_refactor_2024</span><br>
+<span class="output">Session geladen: 4 Turns im Verlauf</span>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">&#128161;</div>
+<div class="info-box-content">
+<div class="info-box-title">Workflow-Tipp</div>
+<div class="info-box-text">Nutze Turn-Loops fuer alle Aufgaben, die mehrere Perspektiven erfordern: Code-Review (Sicherheit &rarr; Performance &rarr; Lesbarkeit), Debugging (Symptom &rarr; Ursache &rarr; Fix &rarr; Test), Dokumentation (Ueberblick &rarr; Details &rarr; Beispiele).</div>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">&#127881;</div>
+<div class="info-box-content">
+<div class="info-box-title">Zusammenfassung</div>
+<div class="info-box-text">Du beherrschst nun Turn-Loops! Du weisst, wie sie funktionieren, wie du sie konfigurierst, wie das Budget-System arbeitet und wann sie stoppen. Probiere es mit deinen eigenen Aufgaben aus.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- NAVIGATION -->
+<div class="nav-links">
+<a href="../howto.html#s6" class="nav-link prev">06 - Sessions &amp; Bootstrap</a>
+<a href="../howto.html#s8" class="nav-link next">08 - Permission-System</a>
+</div>
+
+</div><!-- /container -->
+
+<footer>
+<p>&copy; 2026 Belkis Aslani. Alle Rechte vorbehalten.</p>
+<p style="margin-top:.4rem"><a href="../impressum.html">Impressum</a> &middot; <a href="../impressum.html#datenschutz">Datenschutz</a> &middot; <a href="../howto.html">Zurueck zum Guide</a></p>
+</footer>
+
+</body>
+</html>

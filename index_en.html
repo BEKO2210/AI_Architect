@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Claw Code — Architecture of an AI Agent Harness | Free E-Book</title>
+<meta name="description" content="Free download: The complete technical documentation of the Python reimplementation of the Claude Code agent harness architecture. 14 chapters, 6,400+ lines.">
+<meta name="author" content="Belkis Aslani">
+<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme:dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme:light)">
+<meta property="og:title" content="Claw Code — Architecture of an AI Agent Harness">
+<meta property="og:description" content="Free e-book: How does an AI agent harness really work? 14 chapters deep dive.">
+<meta property="og:type" content="book">
+<meta property="og:locale" content="en_US">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2L3 14h9l-1 10 10-12h-9l1-10z'/></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--border:#222;--code-bg:#161616;--radius:12px;--max-w:1100px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--fg:#111;--fg2:#666;--accent:#4f46e5;--accent2:#6366f1;--accent-glow:rgba(79,70,229,.08);--green-glow:rgba(34,197,94,.06);--border:#e0e0e0;--code-bg:#f5f5f5}}
+html{font-size:16px;scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}
+::selection{background:var(--accent);color:#fff}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 85%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:transform .3s;padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;letter-spacing:-.02em;white-space:nowrap}
+.nav-logo span{color:var(--accent2)}
+.nav-links{display:none;gap:1.5rem;font-size:.875rem}
+.nav-links a{color:var(--fg2);font-weight:500}
+.nav-links a:hover{color:var(--fg)}
+.nav-right{display:flex;align-items:center;gap:.6rem}
+.lang-switch{font-size:.75rem;color:var(--fg2);font-weight:600;padding:.3rem .6rem;border:1px solid var(--border);border-radius:6px;transition:all .2s}
+.lang-switch:hover{color:var(--fg);border-color:var(--fg2)}
+.nav-cta{background:var(--green);color:#fff;padding:.4rem .85rem;border-radius:6px;font-weight:700;font-size:.75rem;transition:background .2s,transform .15s;white-space:nowrap;letter-spacing:.02em}
+.nav-cta:hover{background:#16a34a;color:#fff;transform:translateY(-1px)}
+.nav-howto{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:.8rem;font-weight:700;transition:all .2s}
+.nav-howto:hover{background:var(--accent2);transform:scale(1.1);color:#fff}
+.hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5rem 1rem 3rem;position:relative}
+.hero::before{content:"";position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:400px;height:400px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none;z-index:0}
+.hero>*{position:relative;z-index:1}
+.badge{display:inline-flex;align-items:center;gap:.4rem;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 30%,transparent);padding:.3rem .75rem;border-radius:100px;margin-bottom:1.25rem}
+.badge::before{content:"";width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+h1{font-size:2.25rem;font-weight:800;letter-spacing:-.04em;line-height:1.08;margin-bottom:.75rem;background:linear-gradient(135deg,var(--fg) 0%,var(--fg2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+h1 em{font-style:normal;-webkit-text-fill-color:var(--accent2)}
+.hero-sub{font-size:.95rem;color:var(--fg2);max-width:500px;margin:0 auto 2rem;line-height:1.6}
+.hero-actions{display:flex;flex-direction:column;gap:.65rem;width:100%;max-width:320px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 1.5rem;border-radius:10px;font-weight:700;font-size:.95rem;transition:all .2s;border:none;cursor:pointer;width:100%;text-align:center}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 4px 24px rgba(34,197,94,.25)}
+.btn-primary:hover{background:#16a34a;color:#fff;transform:translateY(-2px);box-shadow:0 8px 32px rgba(34,197,94,.35)}
+.btn-ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--fg2);background:var(--bg2)}
+.free-tag{font-size:.7rem;background:var(--green-glow);color:var(--green);padding:.15rem .5rem;border-radius:100px;font-weight:700;letter-spacing:.03em;border:1px solid color-mix(in srgb,var(--green) 25%,transparent)}
+.hero-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-top:2.5rem;width:100%;max-width:420px}
+.stat{text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.65rem .15rem}
+.stat-num{display:block;font-size:1.1rem;font-weight:800;letter-spacing:-.03em;color:var(--accent2)}
+.stat-label{font-size:.5rem;color:var(--fg2);text-transform:uppercase;letter-spacing:.04em}
+section{padding:3rem 1rem}
+.container{max-width:var(--max-w);margin:0 auto}
+.section-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.5rem}
+.section-title{font-size:1.6rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.75rem}
+.section-desc{color:var(--fg2);font-size:.9rem;max-width:550px;line-height:1.7;margin-bottom:2rem}
+.arch-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem}
+.arch-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:border-color .3s,transform .3s}
+.arch-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.arch-icon{width:36px;height:36px;border-radius:8px;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:.75rem}
+.arch-card h3{font-size:.95rem;font-weight:700;margin-bottom:.35rem}
+.arch-card p{font-size:.8rem;color:var(--fg2);line-height:1.6}
+.code-window{background:var(--code-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:1.5rem}
+.code-bar{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:color-mix(in srgb,var(--bg) 50%,var(--code-bg));border-bottom:1px solid var(--border)}
+.code-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.code-dot:nth-child(1){background:#ff5f57}
+.code-dot:nth-child(2){background:#febc2e}
+.code-dot:nth-child(3){background:#28c840}
+.code-bar span{margin-left:.4rem;font-size:.65rem;color:var(--fg2);font-family:var(--mono)}
+pre.code-block{padding:1rem;font-family:var(--mono);font-size:.7rem;line-height:1.65;overflow-x:auto;color:var(--fg2);margin:0;-webkit-overflow-scrolling:touch}
+pre.code-block .kw{color:var(--accent2)}
+pre.code-block .fn{color:#34d399}
+pre.code-block .str{color:#fbbf24}
+pre.code-block .cm{color:#555}
+pre.code-block .num{color:#f472b6}
+.chapters-list{display:grid;gap:.4rem}
+.ch{display:grid;grid-template-columns:2.25rem 1fr;align-items:center;gap:.6rem;padding:.75rem .85rem;border-radius:10px;background:var(--bg2);border:1px solid var(--border);transition:all .25s;cursor:default;min-height:3.5rem}
+.ch:hover{border-color:var(--accent);background:var(--bg3)}
+.ch-num{font-size:1.15rem;font-weight:800;color:var(--accent2);font-variant-numeric:tabular-nums;text-align:center}
+.ch-title{font-weight:600;font-size:.85rem;line-height:1.3}
+.ch-desc{font-size:.7rem;color:var(--fg2);margin-top:.1rem;line-height:1.4}
+.ch-tag{display:none}
+.author-card{display:flex;flex-direction:column;gap:1.25rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-top:1.5rem}
+.author-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;color:#fff;font-weight:800}
+.author-info h3{font-size:1.1rem;font-weight:700;margin-bottom:.35rem}
+.author-info p{color:var(--fg2);font-size:.85rem;line-height:1.65}
+.author-meta{display:grid;grid-template-columns:1fr;gap:.4rem;margin-top:.75rem}
+.author-meta span{font-size:.75rem;color:var(--fg2);display:flex;align-items:center;gap:.35rem}
+.cta-section{text-align:center;padding:3.5rem 1rem;background:linear-gradient(180deg,transparent 0%,var(--green-glow) 50%,transparent 100%);padding-bottom:calc(3.5rem + var(--safe-b))}
+.cta-section .section-title{max-width:500px;margin:0 auto .75rem}
+.cta-section .section-desc{margin:0 auto 2rem;text-align:center}
+.cta-free{font-size:2.5rem;font-weight:800;color:var(--green);letter-spacing:-.03em;margin-bottom:.25rem}
+.cta-free-sub{font-size:.85rem;color:var(--fg2);margin-bottom:1.5rem}
+.cta-features{display:grid;grid-template-columns:repeat(2,auto);gap:.4rem 1.25rem;justify-content:center;margin-bottom:1.5rem}
+.cta-features span{font-size:.75rem;color:var(--fg2);display:flex;align-items:center;gap:.3rem}
+.cta-features span::before{content:"✓";color:var(--green);font-weight:700}
+.cta-dl{display:flex;flex-direction:column;align-items:center;gap:.75rem;width:100%;max-width:340px;margin:0 auto}
+.cta-compat{margin-top:1rem;font-size:.7rem;color:var(--fg2)}
+footer{border-top:1px solid var(--border);padding:1.5rem 1rem calc(1.5rem + var(--safe-b));text-align:center}
+footer p{font-size:.75rem;color:var(--fg2)}
+@media(min-width:640px){
+.hero{padding:6rem 1.5rem 4rem}
+h1{font-size:3rem}
+.hero-sub{font-size:1.05rem}
+.hero-actions{flex-direction:row;max-width:none;width:auto}
+.btn{width:auto;padding:.85rem 2rem}
+.hero-stats{max-width:560px;gap:.75rem}
+.arch-grid{gap:1rem}
+section{padding:4rem 1.5rem}
+.section-title{font-size:2rem}
+.ch{grid-template-columns:2.75rem 1fr auto;gap:.85rem;padding:.85rem 1.1rem}
+.ch-tag{display:inline-block;font-size:.65rem;background:var(--accent-glow);color:var(--accent2);padding:.15rem .5rem;border-radius:100px;font-weight:600;white-space:nowrap}
+.ch-title{font-size:.9rem}
+.author-card{flex-direction:row;gap:2rem;padding:2rem;align-items:flex-start}
+.author-meta{grid-template-columns:repeat(3,auto);gap:1.25rem;justify-content:start}
+.cta-dl{flex-direction:row;max-width:none;width:auto;justify-content:center}
+pre.code-block{font-size:.8rem;padding:1.25rem}
+}
+@media(min-width:1024px){
+.nav-inner{padding:.75rem 1.5rem}
+.nav-links{display:flex}
+.hero{min-height:100vh}
+h1{font-size:4.2rem}
+.hero-sub{font-size:1.2rem;max-width:600px}
+.stat-num{font-size:1.5rem}
+.stat-label{font-size:.6rem}
+.arch-grid{grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.arch-card{padding:1.75rem}
+section{padding:5rem 1.5rem}
+.section-title{font-size:2.5rem}
+.ch-num{font-size:1.4rem}
+.ch-title{font-size:.95rem}
+.ch{padding:1rem 1.25rem}
+.cta-free{font-size:3rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" role="navigation" aria-label="Main navigation">
+<div class="nav-inner">
+<div class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span>.book</div>
+<div class="nav-links">
+<a href="#architecture">Architecture</a>
+<a href="#chapters">Chapters</a>
+<a href="howto_en.html">How-To Guide</a>
+<a href="#author">Author</a>
+</div>
+<div class="nav-right">
+<a href="index.html" class="lang-switch">🇩🇪 DE</a>
+<a href="#download" class="nav-cta">FREE DOWNLOAD</a>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="badge">Available now — 1st Edition 2026</div>
+<h1>Claw Code<br>Architecture of an<br><em>AI Agent Harness</em></h1>
+<p class="hero-sub">How does an AI agent harness really work? 14 chapters deep-dive into the architecture of Claude Code — from the bootstrap phase to token routing.</p>
+<div class="hero-actions">
+<a href="Claw_Code_Architecture_of_an_AI_Agent_Harness.epub" download class="btn btn-primary">Free EPUB Download <span class="free-tag">FREE</span></a>
+<a href="#chapters" class="btn btn-ghost">Table of Contents</a>
+</div>
+<div class="hero-stats">
+<div class="stat"><span class="stat-num">14</span><span class="stat-label">Chapters</span></div>
+<div class="stat"><span class="stat-num">6.4k+</span><span class="stat-label">Lines</span></div>
+<div class="stat"><span class="stat-num">207</span><span class="stat-label">Commands</span></div>
+<div class="stat"><span class="stat-num">184</span><span class="stat-label">Tools</span></div>
+<div class="stat"><span class="stat-num">$0</span><span class="stat-label">Cost</span></div>
+</div>
+</header>
+
+<section id="architecture">
+<div class="container">
+<p class="section-label">Three-Layer Model</p>
+<h2 class="section-title">The architecture you will understand</h2>
+<p class="section-desc">Claw Code follows a clear three-layer model. This book explains each layer line by line — with code examples, ASCII diagrams, and data flow analysis.</p>
+<div class="arch-grid">
+<div class="arch-card"><div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 10 6.5v7L12 22 2 15.5v-7L12 2z"/><path d="M12 22v-6.5"/><path d="m22 8.5-10 7-10-7"/></svg></div><h3>Mirror Layer</h3><p>207 commands and 184 tools as JSON snapshots. LRU-cached, immutable, typed.</p></div>
+<div class="arch-card"><div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></div><h3>Orchestration Layer</h3><p>Token-based prompt routing, session bootstrapping, multi-turn loops with budget control.</p></div>
+<div class="arch-card"><div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg></div><h3>Infrastructure Layer</h3><p>7-phase bootstrap, trust gating, prefetch operations, JSON session persistence.</p></div>
+<div class="arch-card"><div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>Permission System</h3><p>Deny-list-based access control with name and prefix matching.</p></div>
+<div class="arch-card"><div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg></div><h3>29 Subsystems</h3><p>From utils (564 modules) to voice (1 module) — each documented with JSON metadata.</p></div>
+<div class="arch-card"><div class="arch-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div><h3>Ethics & Law</h3><p>Clean-room reimplementation, copyleft debate, the questions that matter.</p></div>
+</div>
+<div class="code-window">
+<div class="code-bar">
+<div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
+<span>src/runtime.py</span>
+</div>
+<pre class="code-block"><span class="kw">class</span> <span class="fn">PortRuntime</span>:
+    <span class="kw">def</span> <span class="fn">route_prompt</span>(self, prompt: <span class="fn">str</span>, limit: <span class="fn">int</span> = <span class="num">5</span>):
+        <span class="cm"># Tokenization</span>
+        tokens = {t.lower() <span class="kw">for</span> t <span class="kw">in</span>
+            prompt.replace(<span class="str">'/'</span>, <span class="str">' '</span>)
+                  .replace(<span class="str">'-'</span>, <span class="str">' '</span>).split() <span class="kw">if</span> t}
+
+        <span class="cm"># Scoring: 207 commands + 184 tools</span>
+        by_kind = {
+            <span class="str">'command'</span>: self._collect_matches(
+                tokens, PORTED_COMMANDS, <span class="str">'command'</span>),
+            <span class="str">'tool'</span>: self._collect_matches(
+                tokens, PORTED_TOOLS, <span class="str">'tool'</span>),
+        }
+        <span class="kw">return</span> self._select(by_kind, limit)</pre>
+</div>
+</div>
+</section>
+
+<section id="chapters" style="background:var(--bg2)">
+<div class="container">
+<p class="section-label">Table of Contents</p>
+<h2 class="section-title">14 Chapters. No filler.</h2>
+<p class="section-desc">Each chapter goes deep into a module — with source code, sequence diagrams, and architectural analysis.</p>
+<div class="chapters-list">
+<div class="ch"><span class="ch-num">01</span><div><div class="ch-title">Introduction & Background</div><div class="ch-desc">The night of March 31, 2026, OmX orchestration, 25B tokens</div></div><span class="ch-tag">Context</span></div>
+<div class="ch"><span class="ch-num">02</span><div><div class="ch-title">Ethics & Law of AI Reimplementation</div><div class="ch-desc">Hong Minhee's essay, chardet case, copyleft debate</div></div><span class="ch-tag">Ethics</span></div>
+<div class="ch"><span class="ch-num">03</span><div><div class="ch-title">High-Level Architecture</div><div class="ch-desc">Three-layer model, dependency graph, data flow diagrams</div></div><span class="ch-tag">Architecture</span></div>
+<div class="ch"><span class="ch-num">04</span><div><div class="ch-title">The CLI Entry Point</div><div class="ch-desc">main.py in detail, all 24 commands, argparse, dispatch</div></div><span class="ch-tag">Code</span></div>
+<div class="ch"><span class="ch-num">05</span><div><div class="ch-title">Data Models & Type System</div><div class="ch-desc">Frozen dataclasses, PortingModule, value objects</div></div><span class="ch-tag">Code</span></div>
+<div class="ch"><span class="ch-num">06</span><div><div class="ch-title">Command & Tool Catalog</div><div class="ch-desc">JSON snapshots, LRU caching, filtering, permissions</div></div><span class="ch-tag">Code</span></div>
+<div class="ch"><span class="ch-num">07</span><div><div class="ch-title">The Runtime Environment</div><div class="ch-desc">Token scoring, routing algorithm, bootstrap_session</div></div><span class="ch-tag">Core</span></div>
+<div class="ch"><span class="ch-num">08</span><div><div class="ch-title">The Query Engine</div><div class="ch-desc">QueryEnginePort, streaming, token budgeting</div></div><span class="ch-tag">Core</span></div>
+<div class="ch"><span class="ch-num">09</span><div><div class="ch-title">Session Management</div><div class="ch-desc">StoredSession, TranscriptStore, persistence</div></div><span class="ch-tag">Code</span></div>
+<div class="ch"><span class="ch-num">10</span><div><div class="ch-title">Setup & Bootstrap</div><div class="ch-desc">7 phases, prefetch, trust gating</div></div><span class="ch-tag">Code</span></div>
+<div class="ch"><span class="ch-num">11</span><div><div class="ch-title">Execution Layer</div><div class="ch-desc">ExecutionRegistry, shim execution, remote modes</div></div><span class="ch-tag">Code</span></div>
+<div class="ch"><span class="ch-num">12</span><div><div class="ch-title">Subsystem Architecture</div><div class="ch-desc">29 packages, JSON metadata, 1,372 original modules</div></div><span class="ch-tag">Architecture</span></div>
+<div class="ch"><span class="ch-num">13</span><div><div class="ch-title">Quality Assurance</div><div class="ch-desc">Parity audit, 49 tests without mocking</div></div><span class="ch-tag">Testing</span></div>
+<div class="ch"><span class="ch-num">14</span><div><div class="ch-title">Summary & Outlook</div><div class="ch-desc">Rust port, design patterns, future directions</div></div><span class="ch-tag">Outlook</span></div>
+</div>
+</div>
+</section>
+
+<section id="author">
+<div class="container">
+<p class="section-label">The Author</p>
+<h2 class="section-title">Written by a practitioner</h2>
+<div class="author-card">
+<div class="author-avatar">BA</div>
+<div class="author-info">
+<h3>Belkis Aslani</h3>
+<p>Technical author and software architect with a deep interest in AI agent systems, harness engineering, and the question of how intelligent systems wire their tools.</p>
+<div class="author-meta">
+<span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> Freiberg am Neckar, Germany</span>
+<span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> Belkis.aslani@gmail.com</span>
+<span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> 1st Edition, April 2026</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="download" class="cta-section">
+<div class="container">
+<p class="section-label">Free Download</p>
+<h2 class="section-title">Ready to understand the architecture?</h2>
+<p class="section-desc">14 chapters. 6,400+ lines. Every module explained. Completely free.</p>
+<div class="cta-free">$0</div>
+<div class="cta-free-sub">No catch. No newsletter. Just download.</div>
+<div class="cta-features">
+<span>14 deep chapters</span>
+<span>EPUB-3 format</span>
+<span>Code examples</span>
+<span>ASCII diagrams</span>
+<span>Instant download</span>
+<span>No registration</span>
+</div>
+<div class="cta-dl">
+<a href="Claw_Code_Architecture_of_an_AI_Agent_Harness.epub" download class="btn btn-primary" style="font-size:1.05rem;padding:1rem 2rem">Download Free EPUB</a>
+</div>
+<p class="cta-compat">EPUB 3 — Kindle · Apple Books · Google Play · Tolino · Kobo</p>
+</div>
+</section>
+
+<footer>
+<div style="max-width:var(--max-w);margin:0 auto">
+<p>&copy; 2026 Belkis Aslani. All rights reserved.</p>
+<p style="margin-top:.5rem;font-size:.7rem">
+<a href="impressum.html" style="color:var(--fg2)">Legal Notice</a> ·
+<a href="impressum.html#datenschutz" style="color:var(--fg2)">Privacy Policy</a> ·
+Self-published · Freiberg am Neckar, Germany
+</p>
+<p style="margin-top:.5rem;font-size:.65rem;color:var(--border)">
+This work is protected by copyright under German law (§ 2 UrhG). Any use beyond the limits of copyright law requires written consent of the author. Not affiliated with Anthropic.
+</p>
+</div>
+</footer>
+
+<script>
+(function(){
+var l=0,n=document.querySelector('.nav');
+window.addEventListener('scroll',function(){
+var y=window.scrollY;
+n.style.transform=y>l&&y>80?'translateY(-100%)':'translateY(0)';
+l=y;
+},{passive:true});
+})();
+</script>
+</body>
+</html>

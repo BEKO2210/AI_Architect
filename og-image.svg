@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+
+  <!-- Circuit/node pattern decoration -->
+  <g stroke="#6366f1" stroke-width="1.5" fill="none" opacity="0.3">
+    <!-- Horizontal lines -->
+    <line x1="80" y1="200" x2="300" y2="200"/>
+    <line x1="900" y1="200" x2="1120" y2="200"/>
+    <line x1="80" y1="430" x2="300" y2="430"/>
+    <line x1="900" y1="430" x2="1120" y2="430"/>
+    <!-- Vertical lines -->
+    <line x1="150" y1="160" x2="150" y2="470"/>
+    <line x1="1050" y1="160" x2="1050" y2="470"/>
+    <!-- Diagonal connectors -->
+    <line x1="300" y1="200" x2="350" y2="250"/>
+    <line x1="900" y1="200" x2="850" y2="250"/>
+    <line x1="300" y1="430" x2="350" y2="380"/>
+    <line x1="900" y1="430" x2="850" y2="380"/>
+  </g>
+  <g fill="#6366f1" opacity="0.4">
+    <!-- Nodes -->
+    <circle cx="80" cy="200" r="4"/>
+    <circle cx="300" cy="200" r="4"/>
+    <circle cx="1120" cy="200" r="4"/>
+    <circle cx="900" cy="200" r="4"/>
+    <circle cx="80" cy="430" r="4"/>
+    <circle cx="300" cy="430" r="4"/>
+    <circle cx="900" cy="430" r="4"/>
+    <circle cx="1120" cy="430" r="4"/>
+    <circle cx="150" cy="160" r="4"/>
+    <circle cx="150" cy="470" r="4"/>
+    <circle cx="1050" cy="160" r="4"/>
+    <circle cx="1050" cy="470" r="4"/>
+    <circle cx="350" cy="250" r="3"/>
+    <circle cx="850" cy="250" r="3"/>
+    <circle cx="350" cy="380" r="3"/>
+    <circle cx="850" cy="380" r="3"/>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="270" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="80" font-weight="bold" fill="#ffffff">Claw Code</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="340" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="30" fill="#a5b4fc">Architecture of an AI Agent Harness</text>
+
+  <!-- Accent line -->
+  <rect x="450" y="370" width="300" height="2" rx="1" fill="#6366f1" opacity="0.6"/>
+
+  <!-- Bottom text -->
+  <text x="600" y="520" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="22" fill="#9ca3af">14 Chapters · Free Download</text>
+</svg>

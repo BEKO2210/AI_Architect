@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>03 — Die Drei-Schichten-Architektur — Claw Code How-To</title>
+<meta name="description" content="Detaillierte Erklärung der Three-Layer Architecture: Spiegelungsschicht, Orchestrierungsschicht und Infrastrukturschicht des Claw Code Projekts.">
+<link rel="icon" href="../favicon.svg">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--fg:#e8e8e8;--fg2:#999;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--accent-glow2:rgba(99,102,241,.08);--green:#22c55e;--green-glow:rgba(34,197,94,.12);--green-light:#4ade80;--orange:#f59e0b;--orange-glow:rgba(245,158,11,.12);--red:#ef4444;--red-glow:rgba(239,68,68,.12);--blue:#3b82f6;--blue-glow:rgba(59,130,246,.12);--purple:#a855f7;--purple-glow:rgba(168,85,247,.12);--border:#222;--border2:#333;--radius:12px;--radius-sm:8px;--max-w:900px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"SF Mono",SFMono-Regular,ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;--safe-top:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--bg4:#e8e8e8;--fg:#111;--fg2:#666;--accent:#4f46e5;--accent2:#6366f1;--accent-glow:rgba(79,70,229,.08);--green-glow:rgba(34,197,94,.06);--orange-glow:rgba(245,158,11,.06);--purple-glow:rgba(168,85,247,.06);--border:#e0e0e0;--border2:#d0d0d0}}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none;transition:color .2s}
+a:hover{color:var(--accent)}::selection{background:var(--accent);color:#fff}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:var(--safe-top)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.nav-logo{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.35rem}
+.nav-logo span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.nav-back{font-size:.75rem;color:var(--fg2);font-weight:500;padding:.35rem .75rem;border:1px solid var(--border);border-radius:6px;transition:all .2s}
+.nav-back:hover{color:var(--fg);border-color:var(--accent);background:var(--accent-glow)}
+.nav-num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 1rem 2.5rem;position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%)}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:350px;background:radial-gradient(ellipse,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);background:var(--green-glow);border:1px solid color-mix(in srgb,var(--green) 25%,transparent);padding:.25rem .65rem;border-radius:100px;margin-bottom:1rem}
+.hero-badge::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.6rem}
+h1 em{font-style:normal;color:var(--accent2)}
+.hero-sub{font-size:.9rem;color:var(--fg2);max-width:520px;margin:0 auto 1.5rem;line-height:1.6}
+.hero-meta{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;font-size:.75rem;color:var(--fg2)}
+.hero-meta span{display:flex;align-items:center;gap:.3rem}
+
+/* CONTAINER */
+.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}
+
+/* SECTIONS */
+.section{padding:2.5rem 0;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.section-icon{width:48px;height:48px;border-radius:var(--radius);background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;border:1px solid var(--border)}
+.section-title-wrap{flex:1}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);margin-bottom:.2rem}
+.section-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.section-desc{color:var(--fg2);font-size:.85rem;margin-top:.3rem;line-height:1.5}
+
+/* CONTENT */
+.content{font-size:.9rem;line-height:1.8;color:var(--fg2)}
+.content p{margin-bottom:1rem}
+.content p:last-child{margin-bottom:0}
+.content strong{color:var(--fg)}
+.content code{font-family:var(--mono);font-size:.8em;background:var(--bg3);padding:.15rem .4rem;border-radius:4px;color:var(--accent2)}
+.content pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.6}
+.content pre code{background:none;padding:0;font-size:inherit}
+.content ul,.content ol{margin:1rem 0;padding-left:1.5rem}
+.content li{margin:.4rem 0}
+.content h3{font-size:1.1rem;font-weight:700;color:var(--fg);margin:2rem 0 1rem;display:flex;align-items:center;gap:.5rem}
+.content h3::before{content:"";width:4px;height:18px;background:var(--accent);border-radius:2px}
+.content h4{font-size:.95rem;font-weight:600;color:var(--fg);margin:1.5rem 0 .75rem}
+
+/* ARCHITECTURE DIAGRAM */
+.arch-diagram{display:flex;flex-direction:column;gap:0;margin:1.5rem 0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.arch-layer{display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);position:relative}
+.arch-layer:last-child{border-bottom:none}
+.arch-layer.layer-1{background:linear-gradient(90deg,color-mix(in srgb,var(--purple) 8%,var(--bg2)) 0%,var(--bg2) 100%)}
+.arch-layer.layer-2{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 8%,var(--bg2)) 0%,var(--bg2) 100%)}
+.arch-layer.layer-3{background:linear-gradient(90deg,color-mix(in srgb,var(--green) 8%,var(--bg2)) 0%,var(--bg2) 100%)}
+.arch-layer-num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:#fff;flex-shrink:0}
+.layer-1 .arch-layer-num{background:var(--purple);box-shadow:0 0 20px var(--purple-glow)}
+.layer-2 .arch-layer-num{background:var(--accent);box-shadow:0 0 20px var(--accent-glow)}
+.layer-3 .arch-layer-num{background:var(--green);box-shadow:0 0 20px var(--green-glow)}
+.arch-layer-content{flex:1}
+.arch-layer-title{font-weight:700;font-size:1rem;color:var(--fg);margin-bottom:.25rem}
+.arch-layer-desc{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.arch-layer-files{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.arch-file{font-family:var(--mono);font-size:.7rem;padding:.2rem .5rem;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--fg2)}
+
+/* FLOW ARROWS */
+.flow-arrow{display:flex;align-items:center;justify-content:center;height:24px;color:var(--fg2);font-size:1.2rem}
+.flow-arrow::before{content:"↓";opacity:.5}
+
+/* INFO BOXES */
+.info-box{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius-sm);margin:1rem 0;border-left:4px solid}
+.info-box-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.info-box-content{flex:1}
+.info-box-title{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.info-box-text{font-size:.8rem;color:var(--fg2);line-height:1.5}
+.info-box.tip{background:var(--accent-glow2);border-color:var(--accent)}
+.info-box.warning{background:var(--orange-glow);border-color:var(--orange)}
+.info-box.error{background:var(--red-glow);border-color:var(--red)}
+.info-box.success{background:var(--green-glow);border-color:var(--green)}
+.info-box.core{background:var(--purple-glow);border-color:var(--purple)}
+
+/* TERMINAL */
+.terminal{background:#0d0d0d;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin:1rem 0}
+.terminal-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:#1a1a1a;border-bottom:1px solid var(--border2)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-dot.red{background:#ff5f57}
+.terminal-dot.yellow{background:#febc2e}
+.terminal-dot.green{background:#28c840}
+.terminal-title{font-size:.65rem;color:var(--fg2);margin-left:.4rem;font-family:var(--mono)}
+.terminal-body{padding:1rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;color:#e2e2e2;overflow-x:auto}
+.terminal-body .prompt{color:var(--green-light)}
+.terminal-body .cmd{color:#fff}
+.terminal-body .output{color:var(--fg2)}
+.terminal-body .comment{color:#666;font-style:italic}
+.terminal-body .highlight{color:var(--accent2)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:.75rem .75rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg3);font-weight:600;color:var(--fg);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:none}
+td{color:var(--fg2)}
+td code{font-size:.75em}
+
+/* CODE BLOCKS WITH LABELS */
+.code-block{position:relative;margin:1rem 0}
+.code-label{position:absolute;top:0;right:0;background:var(--accent);color:#fff;font-size:.65rem;font-weight:600;padding:.25rem .6rem;border-radius:0 0 0 var(--radius-sm)}
+
+/* FILE EXPLORER */
+.file-tree{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin:1rem 0;font-family:var(--mono);font-size:.8rem;line-height:1.8}
+.file-tree .dir{color:var(--accent2);font-weight:600}
+.file-tree .file{color:var(--fg2)}
+.file-tree .comment{color:var(--fg2);font-style:italic}
+.file-tree ul{list-style:none;padding-left:1.5rem;margin:0}
+.file-tree li{position:relative;margin:.1rem 0}
+.file-tree li::before{content:"├─";position:absolute;left:-1.5rem;color:var(--border2)}
+.file-tree li:last-child::before{content:"└─"}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.65rem;font-weight:600;padding:.15rem .4rem;border-radius:4px;text-transform:uppercase;letter-spacing:.02em}
+.badge-purple{background:var(--purple-glow);color:var(--purple)}
+.badge-blue{background:var(--blue-glow);color:var(--blue)}
+.badge-green{background:var(--green-glow);color:var(--green)}
+
+/* PHASES */
+.phases{display:grid;gap:.5rem;margin:1rem 0}
+.phase{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.phase-num{width:28px;height:28px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--accent2);border:1px solid var(--border)}
+.phase-title{font-weight:600;font-size:.85rem;color:var(--fg)}
+.phase-desc{font-size:.75rem;color:var(--fg2)}
+
+/* BOOTSTRAP VISUAL */
+.bootstrap-flow{display:flex;flex-direction:column;gap:.5rem;margin:1.5rem 0;padding:1.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius)}
+.bootstrap-step{display:flex;align-items:center;gap:1rem}
+.bootstrap-step-num{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+.bootstrap-step-content{flex:1}
+.bootstrap-step-title{font-weight:600;font-size:.85rem;color:var(--fg)}
+.bootstrap-step-desc{font-size:.75rem;color:var(--fg2)}
+.bootstrap-arrow{text-align:center;color:var(--border2);font-size:1.2rem;padding:.25rem 0}
+
+/* NAVIGATION LINKS */
+.page-nav{display:flex;justify-content:space-between;gap:1rem;margin:3rem 0 1rem;padding-top:2rem;border-top:1px solid var(--border)}
+.page-nav-btn{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;transition:all .2s}
+.page-nav-btn:hover{border-color:var(--accent);background:var(--accent-glow)}
+.page-nav-btn.next{margin-left:auto}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 1rem calc(2rem + var(--safe-b));text-align:center;margin-top:3rem}
+footer p{font-size:.75rem;color:var(--fg2)}
+footer a{color:var(--fg2)}
+
+/* RESPONSIVE */
+@media(min-width:640px){
+h1{font-size:2.2rem}
+.hero{padding:6rem 1.5rem 3rem}
+.hero-sub{font-size:1rem}
+.section{padding:3rem 0}
+.section-icon{width:56px;height:56px;font-size:1.75rem}
+.section-title{font-size:1.5rem}
+.arch-layer{padding:1.5rem 2rem}
+.arch-layer-num{width:48px;height:48px;font-size:1.25rem}
+.arch-layer-title{font-size:1.1rem}
+}
+@media(min-width:1024px){
+h1{font-size:2.8rem}
+.hero{padding:7rem 1.5rem 3.5rem}
+.content{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="../index.html" class="nav-logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg> claw<span>code</span></a>
+<div class="nav-right">
+<span class="nav-num">03</span>
+<a href="../howto.html" class="nav-back">← Zurück zum How-To</a>
+</div>
+</div>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">Kernkonzept · Architektur</div>
+<h1>03 — Die <em>Drei-Schichten-Architektur</em></h1>
+<p class="hero-sub">Verstehe das Fundament des Claw Code Projekts: Wie Spiegelung, Orchestrierung und Infrastruktur zusammenspielen, um einen robusten KI-Agent-Harness zu bilden.</p>
+<div class="hero-meta">
+<span>⏱️ ~25 Minuten</span>
+<span>📚 6 Abschnitte</span>
+<span>🔧 Fortgeschritten</span>
+</div>
+</header>
+
+<div class="container">
+
+<!-- ÜBERSICHT -->
+<section class="section" id="overview">
+<div class="section-header">
+<div class="section-icon">🏗️</div>
+<div class="section-title-wrap">
+<div class="section-label">Übersicht</div>
+<h2 class="section-title">Architektur im Überblick</h2>
+<p class="section-desc">Die klare Trennung in drei Schichten ermöglicht modulare Erweiterung, einfaches Testen und nachvollziehbare Datenflüsse.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Claw Code folgt einem strengen <strong>Drei-Schichten-Modell</strong>. Jede Schicht hat eine definierte Verantwortung und kommuniziert nur über klar definierte Schnittstellen mit den anderen Schichten. Diese Architektur entspricht dem <em>Dependency Inversion Principle</em>: Abhängigkeiten zeigen immer nach innen, zur Infrastruktur hin.</p>
+
+<div class="arch-diagram">
+<div class="arch-layer layer-1">
+<div class="arch-layer-num">1</div>
+<div class="arch-layer-content">
+<div class="arch-layer-title">Spiegelungsschicht <span class="badge badge-purple">Daten</span></div>
+<div class="arch-layer-desc">Unveränderliche JSON-Snapshots als Quelle der Wahrheit. Lädt ~150 Befehle und ~100 Tools in typisierte Python-Objekte.</div>
+<div class="arch-layer-files">
+<span class="arch-file">commands.py</span>
+<span class="arch-file">tools.py</span>
+<span class="arch-file">reference_data/*.json</span>
+</div>
+</div>
+</div>
+<div class="flow-arrow"></div>
+<div class="arch-layer layer-2">
+<div class="arch-layer-num">2</div>
+<div class="arch-layer-content">
+<div class="arch-layer-title">Orchestrierungsschicht <span class="badge badge-blue">Logik</span></div>
+<div class="arch-layer-desc">Das "Gehirn" des Systems. Token-basiertes Routing, Session-Management, Multi-Turn-Loops und Budget-Kontrolle.</div>
+<div class="arch-layer-files">
+<span class="arch-file">runtime.py</span>
+<span class="arch-file">query_engine.py</span>
+</div>
+</div>
+</div>
+<div class="flow-arrow"></div>
+<div class="arch-layer layer-3">
+<div class="arch-layer-num">3</div>
+<div class="arch-layer-content">
+<div class="arch-layer-title">Infrastrukturschicht <span class="badge badge-green">System</span></div>
+<div class="arch-layer-desc">Alles was das System am Laufen hält: Umgebungserkennung, Persistenz, Trust-Gating und Bootstrap-Sequenz.</div>
+<div class="arch-layer-files">
+<span class="arch-file">setup.py</span>
+<span class="arch-file">context.py</span>
+<span class="arch-file">session_store.py</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="info-box tip">
+<div class="info-box-icon">💡</div>
+<div class="info-box-content">
+<div class="info-box-title">Architektur-Prinzip</div>
+<div class="info-box-text">Die Schichten sind <strong>unidirektional</strong> gekoppelt: Die Orchestrierungsschicht nutzt die Spiegelungsschicht, die Infrastrukturschicht stellt Dienste für beide bereit. Nie umgekehrt.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SCHICHT 1 -->
+<section class="section" id="schicht-1">
+<div class="section-header">
+<div class="section-icon">📦</div>
+<div class="section-title-wrap">
+<div class="section-label">Schicht 1</div>
+<h2 class="section-title">Spiegelungsschicht</h2>
+<p class="section-desc">Die unveränderliche Datengrundlage — archivierte Snapshots als typisierte Python-Objekte.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Die Spiegelungsschicht ist die <strong>Quelle der Wahrheit</strong> für alle Befehle und Tools. Sie lädt archivierte JSON-Dateien und stellt sie als unveränderliche (frozen) Dataclasses bereit. Dies ermöglicht einen schnellen, typisierten Zugriff ohne externe Datenbank.</p>
+
+<h3>commands.py</h3>
+<p>Dieses Modul verwaltet die ~150 gespiegelten Befehle aus dem TypeScript-Original:</p>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code><span class="comment"># src/commands.py — Kernfunktionen</span>
+
+<span class="highlight">@lru_cache(maxsize=1)</span>
+def load_command_snapshot() -> tuple[PortingModule, ...]:
+    <span class="comment"># Lädt ~150 Befehle aus JSON, gecached für Performance</span>
+    raw_entries = json.loads(SNAPSHOT_PATH.read_text())
+    return tuple(
+        PortingModule(
+            name=entry['name'],
+            responsibility=entry['responsibility'],
+            source_hint=entry['source_hint'],
+            status='mirrored',
+        )
+        for entry in raw_entries
+    )
+
+<span class="highlight">PORTED_COMMANDS = load_command_snapshot()</span>
+
+def get_command(name: str) -> PortingModule | None:
+    <span class="comment"># O(1) Lookup durch Tuple-Iteration</span>
+    needle = name.lower()
+    for module in PORTED_COMMANDS:
+        if module.name.lower() == needle:
+            return module
+    return None</code></pre>
+</div>
+
+<h4>Wichtige Eigenschaften:</h4>
+<ul>
+<li><strong>LRU-Cache</strong> — Die Snapshot-Ladung wird gecached (<code>maxsize=1</code>), da sich die Daten zur Laufzeit nicht ändern</li>
+<li><strong>Frozen Dataclasses</strong> — <code>PortingModule</code> ist immutable — keine versehentlichen Mutationen</li>
+<li><strong>Tuple-Struktur</strong> — Unveränderliche Sequenz statt Liste für Thread-Safety</li>
+</ul>
+
+<h3>tools.py</h3>
+<p>Strukturell identisch zu <code>commands.py</code>, aber mit zusätzlicher Berechtigungslogik:</p>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code><span class="comment"># src/tools.py — Erweiterte Filterung</span>
+
+def filter_tools_by_permission_context(
+    tools: tuple[PortingModule, ...],
+    permission_context: ToolPermissionContext | None = None
+) -> tuple[PortingModule, ...]:
+    <span class="comment"># Filtert Tools basierend auf Permission-Denials</span>
+    if permission_context is None:
+        return tools
+    return tuple(
+        module for module in tools 
+        if not permission_context.blocks(module.name)
+    )
+
+def get_tools(
+    simple_mode: bool = False,
+    include_mcp: bool = True,
+    permission_context: ToolPermissionContext | None = None,
+) -> tuple[PortingModule, ...]:
+    <span class="comment"># Flexible Tool-Selektion mit Filtern</span>
+    tools = list(PORTED_TOOLS)
+    if simple_mode:
+        tools = [m for m in tools if m.name in 
+                 {'BashTool', 'FileReadTool', 'FileEditTool'}]
+    if not include_mcp:
+        tools = [m for m in tools if 'mcp' not in m.name.lower()]
+    return filter_tools_by_permission_context(tuple(tools), permission_context)</code></pre>
+</div>
+
+<div class="info-box core">
+<div class="info-box-icon">🎯</div>
+<div class="info-box-content">
+<div class="info-box-title">Core Konzept: Unveränderlichkeit</div>
+<div class="info-box-text">Die Verwendung von <code>frozen=True</code> in Dataclasses und Tupeln statt Listen garantiert, dass die gespiegelten Daten während der gesamten Laufzeit konsistent bleiben. Keine Race Conditions, keine Überraschungen.</div>
+</div>
+</div>
+
+<h3>Die Referenzdaten</h3>
+<div class="file-tree">
+<span class="dir">src/reference_data/</span>
+<ul>
+<li><span class="file">commands_snapshot.json</span> <span class="comment"># ~150 Befehle</span></li>
+<li><span class="file">tools_snapshot.json</span> <span class="comment"># ~100 Tools</span></li>
+<li><span class="file">__init__.py</span></li>
+</ul>
+</div>
+
+<p>Die JSON-Dateien werden aus dem ursprünglichen TypeScript-System extrahiert und archiviert. Sie enthalten:</p>
+<ul>
+<li><strong>Name</strong> — Der Befehls-/Tool-Name</li>
+<li><strong>Responsibility</strong> — Beschreibung der Funktionalität</li>
+<li><strong>Source-Hint</strong> — Herkunft (welches Modul definiert dies)</li>
+</ul>
+</div>
+</section>
+
+<!-- SCHICHT 2 -->
+<section class="section" id="schicht-2">
+<div class="section-header">
+<div class="section-icon">⚙️</div>
+<div class="section-title-wrap">
+<div class="section-label">Schicht 2</div>
+<h2 class="section-title">Orchestrierungsschicht</h2>
+<p class="section-desc">Das "Gehirn" des Systems — Routing, Sessions und Ausführungskontrolle.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Hier passiert die <strong>Intelligenz</strong> des Systems. Die Orchestrierungsschicht nimmt Benutzer-Prompts entgegen, findet passende Befehle und Tools, verwaltet Sessions und koordiniert die Ausführung.</p>
+
+<h3>runtime.py</h3>
+<p>Das Herzstück: <code>PortRuntime</code> mit dem Token-basierten Routing-Algorithmus:</p>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code><span class="comment"># src/runtime.py — Der Routing-Algorithmus</span>
+
+class PortRuntime:
+    def route_prompt(self, prompt: str, limit: int = 5) -> list[RoutedMatch]:
+        <span class="comment"># 1. Tokenisierung: Normalisierung des Prompts</span>
+        tokens = {
+            token.lower() 
+            for token in prompt.replace('/', ' ').replace('-', ' ').split() 
+            if token
+        }
+        
+        <span class="comment"># 2. Scoring für Commands und Tools</span>
+        by_kind = {
+            'command': self._collect_matches(tokens, PORTED_COMMANDS, 'command'),
+            'tool': self._collect_matches(tokens, PORTED_TOOLS, 'tool'),
+        }
+        
+        <span class="comment"># 3. Fair-Share: Je ein bester Treffer pro Kategorie</span>
+        selected: list[RoutedMatch] = []
+        for kind in ('command', 'tool'):
+            if by_kind[kind]:
+                selected.append(by_kind[kind].pop(0))
+        
+        <span class="comment"># 4. Auffüllung nach Score bis zum Limit</span>
+        leftovers = sorted(
+            [m for matches in by_kind.values() for m in matches],
+            key=lambda item: (-item.score, item.kind, item.name),
+        )
+        selected.extend(leftovers[: max(0, limit - len(selected))])
+        return selected[:limit]
+
+    @staticmethod
+    def _score(tokens: set[str], module: PortingModule) -> int:
+        <span class="comment"># Scoring: Wie viele Tokens matchen?</span>
+        haystacks = [
+            module.name.lower(),
+            module.source_hint.lower(), 
+            module.responsibility.lower()
+        ]
+        return sum(
+            1 for token in tokens 
+            if any(token in h for h in haystacks)
+        )</code></pre>
+</div>
+
+<h4>Der Routing-Algorithmus im Detail:</h4>
+<div class="table-wrap">
+<table>
+<tr><th>Phase</th><th>Beschreibung</th><th>Beispiel</th></tr>
+<tr><td>1. Tokenisierung</td><td>Prompt wird normalisiert</td><td><code>"git-branch erstellen"</code> → <code>{"git", "branch", "erstellen"}</code></td></tr>
+<tr><td>2. Scoring</td><td>Jeder Treffer erhält Punkte</td><td>Name-Match: +1, Source-Hint: +1</td></tr>
+<tr><td>3. Fair-Share</td><td>Mindestens ein Command + ein Tool</td><td>Garantiert Vielfalt</td></tr>
+<tr><td>4. Sortierung</td><td>Rest nach Score sortiert</td><td>Höchster Score zuerst</td></tr>
+</table>
+</div>
+
+<h3>query_engine.py</h3>
+<p>Verwaltet Sessions, Nachrichten-Transkripte und Budget-Kontrolle:</p>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code><span class="comment"># src/query_engine.py — Session-Management</span>
+
+@dataclass
+class QueryEnginePort:
+    manifest: PortManifest
+    config: QueryEngineConfig = field(default_factory=QueryEngineConfig)
+    session_id: str = field(default_factory=lambda: uuid4().hex)
+    mutable_messages: list[str] = field(default_factory=list)
+    total_usage: UsageSummary = field(default_factory=UsageSummary)
+    transcript_store: TranscriptStore = field(default_factory=TranscriptStore)
+
+    def submit_message(self, prompt: str, ...) -> TurnResult:
+        <span class="comment"># Budget-Prüfung vor Verarbeitung</span>
+        if len(self.mutable_messages) >= self.config.max_turns:
+            return TurnResult(stop_reason='max_turns_reached', ...)
+        
+        <span class="comment"># Verarbeitung und Usage-Tracking</span>
+        projected_usage = self.total_usage.add_turn(prompt, output)
+        
+        <span class="comment"># Budget-Überschreitung?</span>
+        total = projected_usage.input_tokens + projected_usage.output_tokens
+        if total > self.config.max_budget_tokens:
+            stop_reason = 'max_budget_reached'
+        
+        self.compact_messages_if_needed()
+        return TurnResult(...)
+
+    def persist_session(self) -> str:
+        <span class="comment"># Speichert Session nach .port_sessions/</span>
+        return save_session(StoredSession(...))</code></pre>
+</div>
+
+<h4>TurnResult enthält:</h4>
+<ul>
+<li><strong>prompt</strong> — Der ursprüngliche Prompt</li>
+<li><strong>matched_commands/tools</strong> — Gefundene Befehle und Tools</li>
+<li><strong>permission_denials</strong> — Blockierte Tools (z.B. Bash)</li>
+<li><strong>usage</strong> — Token-Verbrauch</li>
+<li><strong>stop_reason</strong> — Warum der Turn endete</li>
+</ul>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Routing ausprobieren</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main route "Erstelle einen Git-Branch"</span><br><br>
+<span class="output">Routed Matches (5):<br>1. [command] git-branch (Score: 2) — git/commands<br>2. [tool] Bash (Score: 1) — tools/shell<br>3. [command] git-checkout (Score: 1) — git/commands<br>4. [command] git-status (Score: 1) — git/commands<br>5. [tool] FileReadTool (Score: 0) — tools/filesystem</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- SCHICHT 3 -->
+<section class="section" id="schicht-3">
+<div class="section-header">
+<div class="section-icon">🔧</div>
+<div class="section-title-wrap">
+<div class="section-label">Schicht 3</div>
+<h2 class="section-title">Infrastrukturschicht</h2>
+<p class="section-desc">Das Fundament — Umgebung, Persistenz und sichere Initialisierung.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Die Infrastrukturschicht stellt alle Dienste bereit, die das System zum Laufen braucht. Sie kennt keine Geschäftslogik, sondern bietet reine technische Services.</p>
+
+<h3>context.py</h3>
+<p>Erfasst den Workspace-Kontext zur Laufzeit:</p>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code><span class="comment"># src/context.py — Workspace-Kontext</span>
+
+@dataclass(frozen=True)
+class PortContext:
+    source_root: Path
+    tests_root: Path
+    assets_root: Path
+    archive_root: Path
+    python_file_count: int
+    test_file_count: int
+    asset_file_count: int
+    archive_available: bool
+
+def build_port_context(base: Path | None = None) -> PortContext:
+    root = base or Path(__file__).resolve().parent.parent
+    source_root = root / 'src'
+    tests_root = root / 'tests'
+    assets_root = root / 'assets'
+    archive_root = root / 'archive' / 'claude_code_ts_snapshot' / 'src'
+    
+    return PortContext(
+        source_root=source_root,
+        tests_root=tests_root,
+        assets_root=assets_root,
+        archive_root=archive_root,
+        python_file_count=sum(1 for p in source_root.rglob('*.py') if p.is_file()),
+        test_file_count=sum(1 for p in tests_root.rglob('*.py') if p.is_file()),
+        asset_file_count=sum(1 for p in assets_root.rglob('*') if p.is_file()),
+        archive_available=archive_root.exists(),
+    )</code></pre>
+</div>
+
+<p>Der <code>PortContext</code> ist wieder <strong>frozen</strong> — einmal erfasst, ändert er sich nicht. Das verhindert Inkonsistenzen während einer Session.</p>
+
+<h3>setup.py</h3>
+<p>Initialisiert die Arbeitsumgebung und führt Prefetch-Operationen durch:</p>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code><span class="comment"># src/setup.py — System-Initialisierung</span>
+
+@dataclass(frozen=True)
+class WorkspaceSetup:
+    python_version: str
+    implementation: str          <span class="comment"># CPython, PyPy, etc.</span>
+    platform_name: str
+    test_command: str = 'python3 -m unittest discover -s tests -v'
+
+@dataclass(frozen=True)
+class SetupReport:
+    setup: WorkspaceSetup
+    prefetches: tuple[PrefetchResult, ...]
+    deferred_init: DeferredInitResult
+    trusted: bool               <span class="comment"># Trust-Gating Flag</span>
+    cwd: Path
+
+def run_setup(cwd: Path | None = None, trusted: bool = True) -> SetupReport:
+    root = cwd or Path(__file__).resolve().parent.parent
+    
+    <span class="comment"># Parallele Prefetch-Operationen</span>
+    prefetches = [
+        start_mdm_raw_read(),         <span class="comment"># Geräte-Info</span>
+        start_keychain_prefetch(),    <span class="comment"># Schlüsselbund</span>
+        start_project_scan(root),     <span class="comment"># Projekt-Struktur</span>
+    ]
+    
+    return SetupReport(
+        setup=build_workspace_setup(),
+        prefetches=tuple(prefetches),
+        deferred_init=run_deferred_init(trusted=trusted),
+        trusted=trusted,
+        cwd=root,
+    )</code></pre>
+</div>
+
+<h3>session_store.py</h3>
+<p>Persistiert Sessions im Dateisystem:</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">python</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Sessions werden gespeichert nach:</span><br>
+<span class="output">.port_sessions/{session_id}.json</span><br><br>
+<span class="comment"># Inhalt:</span><br>
+<span class="output">{<br>&nbsp;&nbsp;"session_id": "abc123...",<br>&nbsp;&nbsp;"messages": ["prompt1", "prompt2", ...],<br>&nbsp;&nbsp;"input_tokens": 1500,<br>&nbsp;&nbsp;"output_tokens": 800<br>}</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">✅</div>
+<div class="info-box-content">
+<div class="info-box-title">Design-Entscheidung</div>
+<div class="info-box-text">Die Infrastrukturschicht nutzt ausschließlich die Python-Standardbibliothek. Keine externen Abhängigkeiten für maximale Portabilität.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TRUST-GATING -->
+<section class="section" id="trust-gating">
+<div class="section-header">
+<div class="section-icon">🔒</div>
+<div class="section-title-wrap">
+<div class="section-label">Sicherheit</div>
+<h2 class="section-title">Trust-Gating erklärt</h2>
+<p class="section-desc">Verzögerte Initialisierung für sichere Code-Ausführung.</p>
+</div>
+</div>
+
+<div class="content">
+<p><strong>Trust-Gating</strong> ist ein Sicherheitsmechanismus, der sensible Initialisierung erst nach expliziter Freigabe erlaubt. Das verhindert, dass potenziell gefährlicher Code bei bloßem Import ausgeführt wird.</p>
+
+<h3>Wie es funktioniert</h3>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code><span class="comment"># src/deferred_init.py — Verzögerte Initialisierung</span>
+
+@dataclass(frozen=True)
+class DeferredInitResult:
+    trusted: bool
+    plugin_init: bool      <span class="comment"># Plugins laden?</span>
+    skill_init: bool       <span class="comment"># Skills initialisieren?</span>
+    mcp_prefetch: bool     <span class="comment"># MCP-Tools prefetch?</span>
+    session_hooks: bool    <span class="comment"># Session-Hooks aktiv?</span>
+
+def run_deferred_init(trusted: bool) -> DeferredInitResult:
+    enabled = bool(trusted)
+    return DeferredInitResult(
+        trusted=trusted,
+        plugin_init=enabled,
+        skill_init=enabled,
+        mcp_prefetch=enabled,
+        session_hooks=enabled,
+    )</code></pre>
+</div>
+
+<h3>Permission-System</h3>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code><span class="comment"># src/permissions.py — Tool-Blockierung</span>
+
+@dataclass(frozen=True)
+class ToolPermissionContext:
+    deny_names: frozenset[str] = field(default_factory=frozenset)
+    deny_prefixes: tuple[str, ...] = ()
+
+    def blocks(self, tool_name: str) -> bool:
+        lowered = tool_name.lower()
+        return (
+            lowered in self.deny_names or
+            any(lowered.startswith(p) for p in self.deny_prefixes)
+        )
+
+<span class="comment"># Verwendung:</span>
+ctx = ToolPermissionContext.from_iterables(
+    deny_names=['Bash', 'Write'],
+    deny_prefixes=['mcp__']
+)
+filtered_tools = filter_tools_by_permission_context(tools, ctx)</code></pre>
+</div>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Tool-Blockierung über CLI</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool Bash</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-prefix mcp__</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main tools --deny-tool Bash --deny-tool Write</span>
+</div>
+</div>
+
+<h4>Bash-Tool automatisch blockiert</h4>
+<p>Das <code>Bash</code>-Tool wird automatisch als <code>PermissionDenial</code> markiert, da Shell-Ausführung im Port nicht erlaubt ist:</p>
+
+<div class="code-block">
+<span class="code-label">Python</span>
+<pre><code>def _infer_permission_denials(self, matches: list[RoutedMatch]) -> list[PermissionDenial]:
+    denials: list[PermissionDenial] = []
+    for match in matches:
+        if match.kind == 'tool' and 'bash' in match.name.lower():
+            denials.append(PermissionDenial(
+                tool_name=match.name,
+                reason='destructive shell execution remains gated in the Python port'
+            ))
+    return denials</code></pre>
+</div>
+</div>
+</section>
+
+<!-- BOOTSTRAP-PHASEN -->
+<section class="section" id="bootstrap">
+<div class="section-header">
+<div class="section-icon">🚀</div>
+<div class="section-title-wrap">
+<div class="section-label">Initialisierung</div>
+<h2 class="section-title">Bootstrap-Phasen</h2>
+<p class="section-desc">Die 7 Phasen vom Start bis zur ersten Prompt-Verarbeitung.</p>
+</div>
+</div>
+
+<div class="content">
+<p>Der Bootstrap-Vorgang folgt einer strikten Sequenz. Jede Phase baut auf den vorherigen auf und fügt neue Fähigkeiten hinzu.</p>
+
+<div class="bootstrap-flow">
+<div class="bootstrap-step">
+<div class="bootstrap-step-num">1</div>
+<div class="bootstrap-step-content">
+<div class="bootstrap-step-title">Top-Level Prefetch Side Effects</div>
+<div class="bootstrap-step-desc">Parallele Ladevorgänge: Geräte-Info, Schlüsselbund, Projekt-Scan</div>
+</div>
+</div>
+<div class="bootstrap-arrow">↓</div>
+<div class="bootstrap-step">
+<div class="bootstrap-step-num">2</div>
+<div class="bootstrap-step-content">
+<div class="bootstrap-step-title">Warning Handler & Environment Guards</div>
+<div class="bootstrap-step-desc">Abfangen von Warnungen, Umgebungsvariablen-Prüfung</div>
+</div>
+</div>
+<div class="bootstrap-arrow">↓</div>
+<div class="bootstrap-step">
+<div class="bootstrap-step-num">3</div>
+<div class="bootstrap-step-content">
+<div class="bootstrap-step-title">CLI Parser & Pre-Action Trust Gate</div>
+<div class="bootstrap-step-desc">Argument-Parsing, erste Trust-Prüfung</div>
+</div>
+</div>
+<div class="bootstrap-arrow">↓</div>
+<div class="bootstrap-step">
+<div class="bootstrap-step-num">4</div>
+<div class="bootstrap-step-content">
+<div class="bootstrap-step-title">Setup + Commands/Agents Parallel Load</div>
+<div class="bootstrap-step-desc">Workspace-Setup, paralleles Laden der Spiegelungsdaten</div>
+</div>
+</div>
+<div class="bootstrap-arrow">↓</div>
+<div class="bootstrap-step">
+<div class="bootstrap-step-num">5</div>
+<div class="bootstrap-step-content">
+<div class="bootstrap-step-title">Deferred Init After Trust</div>
+<div class="bootstrap-step-desc">Plugins, Skills, MCP-Prefetch (nur wenn trusted=True)</div>
+</div>
+</div>
+<div class="bootstrap-arrow">↓</div>
+<div class="bootstrap-step">
+<div class="bootstrap-step-num">6</div>
+<div class="bootstrap-step-content">
+<div class="bootstrap-step-title">Mode Routing</div>
+<div class="bootstrap-step-desc">Lokal, Remote, SSH, Teleport, Direct-Connect, Deep-Link</div>
+</div>
+</div>
+<div class="bootstrap-arrow">↓</div>
+<div class="bootstrap-step">
+<div class="bootstrap-step-num">7</div>
+<div class="bootstrap-step-content">
+<div class="bootstrap-step-title">Query Engine Submit Loop</div>
+<div class="bootstrap-step-desc">Prompt-Verarbeitung, Session-Management, Ausgabe</div>
+</div>
+</div>
+</div>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Bootstrap-Graph anzeigen</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap-graph</span><br><br>
+<span class="output"># Bootstrap Graph<br><br>- top-level prefetch side effects<br>- warning handler and environment guards<br>- CLI parser and pre-action trust gate<br>- setup() + commands/agents parallel load<br>- deferred init after trust<br>- mode routing: local / remote / ssh / teleport / direct-connect / deep-link<br>- query engine submit loop</span>
+</div>
+</div>
+
+<h3>Die komplette Bootstrap-Session</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">bash</span>
+</div>
+<div class="terminal-body">
+<span class="comment"># Vollständige Session starten</span><br>
+<span class="prompt">$</span> <span class="cmd">python3 -m src.main bootstrap "Analysiere die Codebasis"</span><br><br>
+<span class="output"># Runtime Session<br><br>Prompt: Analysiere die Codebasis<br><br>## Context<br>Source root: src/<br>Python files: 66<br>Archive available: True<br><br>## Setup<br>- Python: 3.11.4 (CPython)<br>- Platform: macOS-14.0-arm64<br><br>## Routed Matches<br>- [command] analyze (Score: 1) — tools/analysis<br>- [tool] FileReadTool (Score: 0) — tools/filesystem<br>...<br><br>Persisted session path: .port_sessions/abc123.json</span>
+</div>
+</div>
+
+<div class="info-box warning">
+<div class="info-box-icon">⚠️</div>
+<div class="info-box-content">
+<div class="info-box-title">Wichtig</div>
+<div class="info-box-text">Die Bootstrap-Phasen müssen in dieser Reihenfolge ausgeführt werden. Eine Umkehr (z.B. Trust-Gate vor Prefetch) würde Sicherheitslücken öffnen.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ZUSAMMENFASSUNG -->
+<section class="section" id="zusammenfassung">
+<div class="section-header">
+<div class="section-icon">📋</div>
+<div class="section-title-wrap">
+<div class="section-label">Zusammenfassung</div>
+<h2 class="section-title">Die Architektur im Überblick</h2>
+<p class="section-desc">Ein Blick auf das Gesamtbild.</p>
+</div>
+</div>
+
+<div class="content">
+<div class="table-wrap">
+<table>
+<tr><th>Schicht</th><th>Kernaufgabe</th><th>Hauptdateien</th><th>Merkmale</th></tr>
+<tr><td><strong>Spiegelung</strong></td><td>Daten bereitstellen</td><td><code>commands.py</code>, <code>tools.py</code></td><td>Immutable, gecached, typisiert</td></tr>
+<tr><td><strong>Orchestrierung</strong></td><td>Logik ausführen</td><td><code>runtime.py</code>, <code>query_engine.py</code></td><td>Routing, Sessions, Budget</td></tr>
+<tr><td><strong>Infrastruktur</strong></td><td>System-Dienste</td><td><code>setup.py</code>, <code>context.py</code>, <code>session_store.py</code></td><td>Persistenz, Trust-Gating, Env</td></tr>
+</table>
+</div>
+
+<h3>Datenfluss durch die Schichten</h3>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<span class="terminal-title">Datenfluss</span>
+</div>
+<div class="terminal-body">
+<span class="highlight">Benutzer-Prompt</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+<span class="highlight">[Infrastruktur]</span> setup.py initialisiert Umgebung<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+<span class="highlight">[Orchestrierung]</span> runtime.py routed den Prompt<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+<span class="highlight">[Spiegelung]</span> commands.py/tools.py liefern Daten<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+<span class="highlight">[Orchestrierung]</span> query_engine.py verwaltet Session<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+<span class="highlight">[Infrastruktur]</span> session_store.py persistiert<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+<span class="highlight">Ausgabe an Benutzer</span>
+</div>
+</div>
+
+<div class="info-box success">
+<div class="info-box-icon">🎉</div>
+<div class="info-box-content">
+<div class="info-box-title">Du hast es verstanden!</div>
+<div class="info-box-text">Die Drei-Schichten-Architektur ist das Fundament des Claw Code Projekts. Sie ermöglicht saubere Trennung von Daten, Logik und Infrastruktur — essenziell für wartbare KI-Systeme.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- NAVIGATION -->
+<div class="page-nav">
+<a href="../howto.html#s2" class="page-nav-btn">← 02 — Repository klonen</a>
+<a href="../howto.html#s4" class="page-nav-btn next">04 — Befehle & Tools →</a>
+</div>
+
+</div><!-- /container -->
+
+<footer>
+<p>© 2026 Belkis Aslani. Alle Rechte vorbehalten.</p>
+<p style="margin-top:.4rem"><a href="../impressum.html">Impressum</a> · <a href="../impressum.html#datenschutz">Datenschutz</a> · <a href="../index.html">Zurück zum Buch</a></p>
+</footer>
+
+</body>
+</html>
